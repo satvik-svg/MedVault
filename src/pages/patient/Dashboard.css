@@ -1,0 +1,107 @@
+/* ===== DASHBOARD SHARED STYLES ===== */
+.dashboard { max-width: 1100px; }
+.dashboard__topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-8); }
+.dashboard__greeting { font-size: var(--text-2xl); font-weight: var(--weight-extrabold); color: var(--color-gray-900); }
+.dashboard__date { font-size: var(--text-sm); color: var(--color-gray-400); margin-top: var(--space-1); }
+.dashboard__topbar-actions { display: flex; align-items: center; gap: var(--space-4); }
+.dashboard__notif-btn {
+  position: relative; width: 40px; height: 40px; border-radius: var(--radius-md);
+  background: white; color: var(--color-gray-600); display: flex; align-items: center; justify-content: center;
+  box-shadow: var(--shadow-sm); transition: all 0.2s;
+}
+.dashboard__notif-btn:hover { box-shadow: var(--shadow-md); color: var(--color-primary-500); }
+.dashboard__notif-dot {
+  position: absolute; top: 8px; right: 8px; width: 8px; height: 8px;
+  border-radius: 50%; background: var(--color-severe); border: 2px solid white;
+}
+.dashboard__avatar {
+  width: 40px; height: 40px; border-radius: var(--radius-md); background: var(--color-primary-500);
+  color: white; display: flex; align-items: center; justify-content: center;
+  font-size: var(--text-sm); font-weight: var(--weight-bold);
+}
+.dashboard__section-title { font-size: var(--text-lg); font-weight: var(--weight-bold); color: var(--color-gray-900); margin-bottom: var(--space-4); }
+
+/* Stats */
+.dashboard__stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-4); margin-bottom: var(--space-6); }
+.stat-card {
+  background: white; border-radius: var(--radius-lg); padding: var(--space-5);
+  display: flex; align-items: center; gap: var(--space-4); box-shadow: var(--shadow-card);
+  transition: all 0.2s;
+}
+.stat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+.stat-card__icon { width: 48px; height: 48px; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.stat-card__value { display: block; font-size: var(--text-2xl); font-weight: var(--weight-extrabold); color: var(--color-gray-900); }
+.stat-card__label { display: block; font-size: var(--text-xs); color: var(--color-gray-400); font-weight: var(--weight-medium); margin-top: 2px; }
+
+/* Dashboard Row */
+.dashboard__row { display: grid; grid-template-columns: 1fr 280px; gap: var(--space-6); margin-bottom: var(--space-6); }
+
+/* Active Meds Banner */
+.active-meds-banner {
+  background: #FFF9E6; border-radius: var(--radius-lg); padding: var(--space-6);
+  border-left: 4px solid var(--color-moderate);
+}
+.active-meds-banner__header { display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-4); }
+.active-meds-banner__header h3 { font-size: var(--text-base); font-weight: var(--weight-bold); color: var(--color-gray-900); }
+.active-meds-banner__list { display: flex; flex-direction: column; gap: var(--space-3); }
+.active-med-pill {
+  display: flex; align-items: center; gap: var(--space-2); padding: var(--space-3);
+  background: white; border-radius: var(--radius-md); font-size: var(--text-sm);
+}
+.active-med-pill strong { color: var(--color-gray-900); }
+.active-med-pill span { color: var(--color-gray-600); }
+.active-med-pill__doctor { margin-left: auto; font-size: var(--text-xs); color: var(--color-gray-400); }
+.active-meds-banner__link { display: block; margin-top: var(--space-4); font-size: var(--text-sm); font-weight: var(--weight-semibold); color: var(--color-primary-600); }
+
+/* QR Preview */
+.qr-preview-card {
+  background: white; border-radius: var(--radius-lg); padding: var(--space-6);
+  box-shadow: var(--shadow-card); text-align: center;
+}
+.qr-preview-card h3 { font-size: var(--text-base); font-weight: var(--weight-bold); margin-bottom: var(--space-4); }
+.qr-preview-card__qr { margin-bottom: var(--space-3); }
+.qr-placeholder {
+  width: 160px; height: 160px; margin: 0 auto; border-radius: var(--radius-lg);
+  background: var(--color-primary-50); display: flex; align-items: center; justify-content: center;
+  border: 2px dashed var(--color-primary-300);
+}
+.qr-preview-card__hint { font-size: var(--text-xs); color: var(--color-gray-400); margin-bottom: var(--space-3); }
+
+/* Prescriptions Table */
+.prescriptions-table { overflow-x: auto; }
+.prescriptions-table__header, .prescriptions-table__row {
+  display: grid; grid-template-columns: 100px 120px 1fr 100px 150px; gap: var(--space-4);
+  padding: var(--space-3) var(--space-4); align-items: center; font-size: var(--text-sm);
+}
+.prescriptions-table__header {
+  font-weight: var(--weight-semibold); color: var(--color-gray-400);
+  border-bottom: 1px solid var(--color-gray-200); font-size: var(--text-xs); text-transform: uppercase; letter-spacing: 0.05em;
+}
+.prescriptions-table__row { border-bottom: 1px solid var(--color-gray-100); transition: background 0.15s; color: var(--color-gray-600); }
+.prescriptions-table__row:hover { background: var(--color-gray-50); }
+.prescriptions-table__row:last-child { border-bottom: none; }
+.prescriptions-table__drug { font-weight: var(--weight-medium); color: var(--color-gray-800); }
+
+/* Appointments */
+.appointments-list { display: flex; flex-direction: column; gap: var(--space-3); }
+.appointment-item {
+  display: flex; justify-content: space-between; align-items: center; padding: var(--space-4);
+  background: var(--color-gray-50); border-radius: var(--radius-md); transition: all 0.2s;
+}
+.appointment-item:hover { background: var(--color-primary-50); }
+.appointment-item__date { display: flex; align-items: center; gap: var(--space-2); font-size: var(--text-sm); color: var(--color-gray-600); }
+.appointment-item__time { color: var(--color-gray-400); }
+.appointment-item__info { display: flex; align-items: center; gap: var(--space-3); }
+.appointment-item__info strong { font-size: var(--text-sm); }
+.appointment-item__type { font-size: var(--text-xs); color: var(--color-gray-400); }
+
+@media (max-width: 1024px) {
+  .dashboard__stats { grid-template-columns: repeat(2, 1fr); }
+  .dashboard__row { grid-template-columns: 1fr; }
+}
+@media (max-width: 640px) {
+  .dashboard__stats { grid-template-columns: 1fr; }
+  .prescriptions-table__header, .prescriptions-table__row { grid-template-columns: 80px 1fr 80px; }
+  .prescriptions-table__header span:nth-child(2), .prescriptions-table__row span:nth-child(2),
+  .prescriptions-table__header span:nth-child(5), .prescriptions-table__row span:nth-child(5) { display: none; }
+}

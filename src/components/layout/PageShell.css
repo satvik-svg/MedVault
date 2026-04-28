@@ -1,0 +1,24 @@
+.page-shell {
+  display: flex;
+  min-height: 100vh;
+}
+
+.page-shell__main {
+  flex: 1;
+  margin-left: 260px;
+  padding: var(--space-8);
+  min-height: 100vh;
+  transition: margin-left 0.3s ease;
+}
+
+.sidebar--collapsed ~ .page-shell__main,
+.page-shell:has(.sidebar--collapsed) .page-shell__main {
+  margin-left: 72px;
+}
+
+@media (max-width: 768px) {
+  .page-shell__main {
+    margin-left: 0;
+    padding: var(--space-4);
+  }
+}
