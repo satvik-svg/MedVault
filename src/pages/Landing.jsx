@@ -25,10 +25,12 @@ const stagger = {
 }
 
 const services = [
-  { icon: <Heart size={32} />, name: 'Cardiology', desc: 'Advanced heart care with real-time monitoring and AI-assisted diagnosis.', color: '#ef4444' },
-  { icon: <Brain size={32} />, name: 'Neurology', desc: 'Comprehensive neurological care with blockchain-verified records.', color: '#8b5cf6' },
-  { icon: <Baby size={32} />, name: 'Gynecology', desc: 'Complete women\'s health with secure prescription management.', color: '#ec4899' },
-  { icon: <Activity size={32} />, name: 'Physiotherapy', desc: 'Rehab programs with tracked progress and drug interaction checks.', color: '#06b6d4' },
+  { icon: <Shield size={32} />, name: 'Drug Safety', desc: 'Real-time interaction checking for every new prescription. Prevents adverse drug events before they happen.', color: '#2563EB' },
+  { icon: <Brain size={32} />, name: 'AI Diagnosis', desc: 'Symptom analysis with XGBoost, calibrated for Indian diseases — Dengue, Typhoid, Malaria and more.', color: '#7c3aed' },
+  { icon: <FileText size={32} />, name: 'Health Records', desc: 'Unified timeline of all records, labs, and prescriptions. Blockchain-verified and tamper-proof.', color: '#0ea5e9' },
+  { icon: <Zap size={32} />, name: 'Lab Report OCR', desc: 'Photograph any paper report — structured data extracted in seconds via AI OCR pipeline.', color: '#f59e0b' },
+  { icon: <AlertTriangle size={32} />, name: 'Emergency Access', desc: 'One QR scan reveals critical info — blood group, allergies, active meds — without login.', color: '#dc2626' },
+  { icon: <Smartphone size={32} />, name: 'WhatsApp Integration', desc: 'Records and medication reminders delivered directly to patient WhatsApp.', color: '#16a34a' },
 ]
 
 const doctors = [
