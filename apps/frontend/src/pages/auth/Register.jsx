@@ -1,14 +1,13 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Shield, User, Stethoscope, ShoppingBag, ArrowRight, ArrowLeft, Check, Calendar } from 'lucide-react'
+import { Shield, User, Stethoscope, FlaskConical, ArrowRight, ArrowLeft, Check } from 'lucide-react'
 import './Auth.css'
 
 const roles = [
   { id: 'patient', label: 'Patient', icon: <User size={20} /> },
   { id: 'doctor', label: 'Doctor', icon: <Stethoscope size={20} /> },
-  { id: 'pharmacy', label: 'Pharmacy', icon: <ShoppingBag size={20} /> },
-  { id: 'clinic', label: 'Clinic', icon: <Shield size={20} /> },
+  { id: 'lab', label: 'Lab', icon: <FlaskConical size={20} /> },
 ]
 
 const stepLabels = ['Basic Info', 'Identity', 'Account']
@@ -138,10 +137,10 @@ export default function Register() {
                       </select>
                     </div>
                   )}
-                  {role === 'pharmacy' && (
+                  {role === 'lab' && (
                     <div className="form-group">
-                      <label className="form-label">Pharmacy Name *</label>
-                      <input className="form-input" placeholder="MedPlus Pharmacy" id="reg-pharmacy-name" />
+                      <label className="form-label">Lab Name *</label>
+                      <input className="form-input" placeholder="Sharma Pathology" id="reg-lab-name" />
                     </div>
                   )}
                 </motion.div>

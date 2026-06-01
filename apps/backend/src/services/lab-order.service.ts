@@ -87,7 +87,7 @@ export async function createLabOrder(input: CreateLabOrderInput, doctorUser: Acc
   if (!patient) throw new Error('Patient not found')
   if (!doctor) throw new Error('Doctor not found')
   if (!lab || lab.trustLevel !== 'VERIFIED' || !lab.isActive) throw new Error('Selected lab is not verified')
-  if (!visit || visit.patientId.toString() !== patient._id.toString() || visit.doctorId.toString() !== doctor._id.toString()) {
+  if (!visit || visit.patientId.toString() !== patient._id.toString() || visit.doctorId?.toString() !== doctor._id.toString()) {
     throw new Error('Visit not found for this doctor and patient')
   }
 
@@ -157,6 +157,16 @@ export async function listPendingLabOrders(labId: string): Promise<unknown[]> {
     .populate('doctorId', 'fullName practice')
     .sort({ createdAt: -1 })
     .lean()
+}
+
+export async function getLabOrderForLab(orderId: string, labId: string): Promise<unknown> {
+  const order = await LabOrder.findOne({ _id: orderId, labId })
+    .populate('patientId', 'fullName medvaultId contact dateOfBirth sex')
+    .populate('doctorId', 'fullName practice')
+    .populate('labReportId')
+    .lean()
+  if (!order) throw new Error('Lab order not found')
+  return order
 }
 
 export async function listPatientLabOrders(patientId: string): Promise<unknown[]> {

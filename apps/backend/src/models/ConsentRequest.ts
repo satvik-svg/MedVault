@@ -3,9 +3,9 @@ import mongoose, { Schema, type Document, type ObjectId } from 'mongoose'
 export interface IConsentRequest extends Document {
   patientId: ObjectId
   granteeUserId: ObjectId
-  granteeType: 'DOCTOR' | 'LAB' | 'PHARMACY'
+  granteeType: 'DOCTOR' | 'LAB'
   scope: string[]
-  purpose: 'CONSULTATION' | 'LAB_REVIEW' | 'PHARMACY_FULFILLMENT' | 'EMERGENCY' | 'OTHER'
+  purpose: 'CONSULTATION' | 'LAB_REVIEW' | 'OTHER'
   status: 'PENDING' | 'APPROVED' | 'DENIED' | 'EXPIRED'
   expiresAt: Date
   resolvedAt?: Date
@@ -17,11 +17,11 @@ export interface IConsentRequest extends Document {
 const ConsentRequestSchema = new Schema<IConsentRequest>({
   patientId: { type: Schema.Types.ObjectId, ref: 'Patient', required: true, index: true },
   granteeUserId: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
-  granteeType: { type: String, enum: ['DOCTOR', 'LAB', 'PHARMACY'], required: true },
+  granteeType: { type: String, enum: ['DOCTOR', 'LAB'], required: true },
   scope: [{ type: String, required: true }],
   purpose: {
     type: String,
-    enum: ['CONSULTATION', 'LAB_REVIEW', 'PHARMACY_FULFILLMENT', 'EMERGENCY', 'OTHER'],
+    enum: ['CONSULTATION', 'LAB_REVIEW', 'OTHER'],
     default: 'OTHER',
   },
   status: {

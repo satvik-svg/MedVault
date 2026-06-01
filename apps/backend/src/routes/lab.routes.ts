@@ -3,7 +3,8 @@ import { authenticate, requireRole } from '../middleware/index.ts'
 import { Lab } from '../models/Lab.ts'
 import { listPatientLabReports, saveExternalLabUpload, uploadStructuredLabReport } from '../services/lab.service.ts'
 import { discoverLabs } from '../services/lab-discovery.service.ts'
-import { listPendingLabOrders, updateLabOrderStatus, uploadLabOrderReport } from '../services/lab-order.service.ts'
+import { getLabOrderForLab, listPendingLabOrders, updateLabOrderStatus, uploadLabOrderReport } from '../services/lab-order.service.ts'
+import { verifyLabReportAnchoring } from '../services/blockchain-verification.service.ts'
 
 const router: RouterType = Router()
 
@@ -56,6 +57,15 @@ router.get('/orders/pending', requireRole('LAB_OPERATOR'), async (req, res) => {
     res.json(orders)
   } catch (error) {
     res.status(400).json({ error: error instanceof Error ? error.message : 'Failed to fetch lab orders' })
+  }
+})
+
+router.get('/orders/:id', requireRole('LAB_OPERATOR'), async (req, res) => {
+  try {
+    const order = await getLabOrderForLab(req.params.id, req.user?.labId || '')
+    res.json(order)
+  } catch (error) {
+    res.status(400).json({ error: error instanceof Error ? error.message : 'Failed to fetch lab order' })
   }
 })
 
@@ -122,11 +132,22 @@ router.post('/external', requireRole('PATIENT'), async (req, res) => {
       fileType: req.body.fileType || 'application/octet-stream',
       reportDate: req.body.reportDate ? new Date(req.body.reportDate) : undefined,
       ocrText: req.body.ocrText,
+      results: req.body.results || [],
+      structuredData: req.body.structuredData,
       aiConfidence: req.body.aiConfidence,
     })
     res.status(201).json(report)
   } catch (error) {
     res.status(400).json({ error: error instanceof Error ? error.message : 'External lab upload failed' })
+  }
+})
+
+router.get('/reports/:id/verify', async (req, res) => {
+  try {
+    const result = await verifyLabReportAnchoring(req.params.id, req.user?.userId)
+    res.json(result)
+  } catch (error) {
+    res.status(400).json({ verified: false, reason: error instanceof Error ? error.message : 'Verification failed' })
   }
 })
 

@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom'
 import { Home, Camera, Edit, Users, BarChart2, Bell, FileText, AlertTriangle, CheckCircle, QrCode, ArrowRight } from 'lucide-react'
 import Sidebar from '../../components/layout/Sidebar.jsx'
 import PageShell from '../../components/layout/PageShell.jsx'
+import QuickRegisterPatient from '../../components/doctor/QuickRegisterPatient.jsx'
 import { doctorApi } from '../../lib/api.js'
 import '../patient/Dashboard.css'
 
@@ -91,6 +92,8 @@ export default function DoctorPortal() {
           </motion.div>
         </div>
 
+        <QuickRegisterPatient onComplete={() => doctorApi.todayQueue().then(setQueue).catch(() => {})} />
+
         {/* Recent Patients */}
         <motion.div className="card card--no-hover" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}>
           <h3 className="dashboard__section-title">Today's Patients</h3>
@@ -108,7 +111,8 @@ export default function DoctorPortal() {
                   </div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
-                  <span style={{ fontSize: 'var(--text-sm)', color: 'var(--color-gray-400)' }}>{formatTime(appointment.slotStart)}</span>
+                  <Link className="btn btn-ghost btn-sm" to={`/doctor/patient/${patient._id || appointment.patientId}`}>Open</Link>
+                  <span style={{ fontSize: 'var(--text-sm)', color: 'var(--color-gray-400)' }}>{formatTime(appointment.startedAt)}</span>
                   <span className={`badge ${appointment.status === 'COMPLETED' ? 'badge-safe' : 'badge-teal'}`}>{appointment.status}</span>
                 </div>
               </div>

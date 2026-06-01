@@ -3,6 +3,7 @@ import { motion } from 'framer-motion'
 import { Home, FileText, QrCode, Bell, Settings, CheckCircle, Shield, Pill, FlaskConical, Calendar, ExternalLink } from 'lucide-react'
 import Sidebar from '../../components/layout/Sidebar.jsx'
 import PageShell from '../../components/layout/PageShell.jsx'
+import BlockchainBadge from '../../components/BlockchainBadge.jsx'
 import './Dashboard.css'
 
 const sidebarItems = [
@@ -18,7 +19,7 @@ const filters = ['All', 'Prescriptions', 'Lab Reports', 'Visits']
 const records = [
   { month: 'APR 2025', items: [
     { type: 'prescription', date: '12 Apr 2025', title: 'Amoxicillin 500mg', doctor: 'Dr. Sharma', clinic: 'City Clinic', hash: '0x7f3a...d4c2', level: 'safe' },
-    { type: 'lab', date: '8 Apr 2025', title: 'HbA1c', result: '6.8%', range: '<5.7%', verified: true },
+    { type: 'lab', date: '8 Apr 2025', title: 'HbA1c', result: '6.8%', range: '<5.7%', verified: true, blockchain: { status: 'ANCHORED', contentHash: '0x7f3a8b10d4c2' } },
   ]},
   { month: 'MAR 2025', items: [
     { type: 'prescription', date: '22 Mar 2025', title: 'Metformin 500mg (renewed)', doctor: 'Dr. Gupta', clinic: 'Apollo Clinic', hash: '0x9e1b...77f8', level: 'safe' },
@@ -77,6 +78,11 @@ export default function MedicalRecord() {
                         <div style={{ marginTop: 'var(--space-3)', display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
                           <span className="badge badge-gold">🔐 {item.hash}</span>
                           <a href="#" style={{ fontSize: 'var(--text-xs)', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>View on chain <ExternalLink size={12} /></a>
+                        </div>
+                      )}
+                      {item.type === 'lab' && item.blockchain && (
+                        <div style={{ marginTop: 'var(--space-3)' }}>
+                          <BlockchainBadge record={item} />
                         </div>
                       )}
                     </div>

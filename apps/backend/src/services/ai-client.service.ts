@@ -71,11 +71,16 @@ export class AIClient {
     }
   }
 
-  async checkRecurrence(patientId: string, currentEntities: unknown[]): Promise<{ recurring_presentations: unknown[] }> {
+  async checkRecurrence(
+    patientId: string,
+    currentEntities: unknown[],
+    pastPresentations: Array<Record<string, unknown>> = []
+  ): Promise<{ recurring_presentations: unknown[] }> {
     try {
       const response = await this.http.post('/recurrence', {
         patient_id: patientId,
         current_entities: currentEntities,
+        past_presentations: pastPresentations,
       })
       return response.data
     } catch (error) {
@@ -91,6 +96,16 @@ export class AIClient {
     } catch (error) {
       if (!config.ai.enableFallbacks) throw error
       return { medications: [], needs_review: true, raw_ocr: {}, fallback: true }
+    }
+  }
+
+  async ocrLabReport(imageBase64: string): Promise<Record<string, unknown>> {
+    try {
+      const response = await this.http.post('/ocr/lab-report/base64', { image_base64: imageBase64 })
+      return response.data
+    } catch (error) {
+      if (!config.ai.enableFallbacks) throw error
+      return { results: [], needs_review: true, raw_ocr: {}, fallback: true }
     }
   }
 }

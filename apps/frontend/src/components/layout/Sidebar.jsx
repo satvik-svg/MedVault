@@ -9,7 +9,7 @@ export default function Sidebar({ items, role }) {
   const roleColors = {
     patient: 'var(--color-primary-500)',
     doctor: 'var(--color-primary-800)',
-    pharmacy: 'var(--color-secondary-600)',
+    lab: 'var(--color-secondary-600)',
     admin: 'var(--color-gray-900)',
   }
 

@@ -3,7 +3,7 @@ import mongoose, { Schema, type Document, type ObjectId } from 'mongoose'
 export interface IAccessLog extends Document {
   actorUserId?: ObjectId
   actorRole?: string
-  action: 'VIEW_PATIENT' | 'CREATE_PRESCRIPTION' | 'VIEW_PRESCRIPTION' | 'DISPENSE_PRESCRIPTION' | 'UPLOAD_LAB' | 'VIEW_LAB' | 'EMERGENCY_QR_GENERATE' | 'EMERGENCY_QR_SCAN' | 'CONSENT_REQUEST' | 'CONSENT_GRANT' | 'CONSENT_REVOKE' | 'BLOCKCHAIN_VERIFY'
+  action: 'VIEW_PATIENT' | 'CREATE_PRESCRIPTION' | 'VIEW_PRESCRIPTION' | 'DISPENSE_PRESCRIPTION' | 'UPLOAD_LAB' | 'VIEW_LAB' | 'CONSENT_REQUEST' | 'CONSENT_GRANT' | 'CONSENT_REVOKE' | 'BLOCKCHAIN_VERIFY' | 'CREATE_VISIT' | 'ATTACH_PRE_VISIT' | 'CREATE_LAB_ORDER'
   targetType?: string
   targetId?: ObjectId
   patientId?: ObjectId
@@ -23,8 +23,8 @@ const AccessLogSchema = new Schema<IAccessLog>({
   action: {
     type: String,
     enum: ['VIEW_PATIENT', 'CREATE_PRESCRIPTION', 'VIEW_PRESCRIPTION', 'DISPENSE_PRESCRIPTION',
-           'UPLOAD_LAB', 'VIEW_LAB', 'EMERGENCY_QR_GENERATE', 'EMERGENCY_QR_SCAN', 'CONSENT_REQUEST',
-           'CONSENT_GRANT', 'CONSENT_REVOKE', 'BLOCKCHAIN_VERIFY'],
+           'UPLOAD_LAB', 'VIEW_LAB', 'CONSENT_REQUEST', 'CONSENT_GRANT', 'CONSENT_REVOKE',
+           'BLOCKCHAIN_VERIFY', 'CREATE_VISIT', 'ATTACH_PRE_VISIT', 'CREATE_LAB_ORDER'],
     required: true,
     index: true,
   },

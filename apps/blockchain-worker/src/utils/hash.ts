@@ -32,3 +32,25 @@ export function canonicalizePrescription(prescription: Record<string, any>): str
   }
   return JSON.stringify(canonical)
 }
+
+export function canonicalizeLabReport(labReport: Record<string, any>): string {
+  const canonical = {
+    reportNumber: labReport.reportNumber || '',
+    patientId: String(labReport.patientId || ''),
+    labId: String(labReport.labId || ''),
+    orderedByDoctorId: labReport.orderedByDoctorId ? String(labReport.orderedByDoctorId) : null,
+    collectionDate: labReport.collectionDate ? new Date(labReport.collectionDate).toISOString() : null,
+    reportDate: new Date(labReport.reportDate).toISOString(),
+    results: (labReport.results || [])
+      .map((result: Record<string, any>) => ({
+        loinc: result.loincCode || '',
+        testName: result.testName || '',
+        value: String(result.value ?? ''),
+        unit: result.unit || '',
+      }))
+      .sort((a: Record<string, any>, b: Record<string, any>) => (
+        String(a.loinc || a.testName).localeCompare(String(b.loinc || b.testName))
+      )),
+  }
+  return JSON.stringify(canonical)
+}

@@ -37,7 +37,6 @@ export {
 } from './lab-order.service.ts'
 export { deliverLabReportToDoctor } from './lab-report-delivery.service.ts'
 export { buildPatientTimeline, buildPatientSummary } from './patient-summary.service.ts'
-export { generateEmergencyQR, revokeEmergencyQR, scanEmergencyQR, sweepExpiredEmergencyQRs, GeoAnomalyError } from './emergency-qr.service.ts'
 export { uploadExternalPrescription, confirmExternalPrescription } from './external-prescription.service.ts'
 export { verifyPrescriptionAnchoring } from './blockchain-verification.service.ts'
 export { aiClient, AIClient } from './ai-client.service.ts'

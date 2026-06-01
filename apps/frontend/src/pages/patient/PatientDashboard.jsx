@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
-import { Home, FileText, Pill, QrCode, Bell, Settings, Activity, Heart, AlertTriangle, Hash, Calendar, Clock, Shield } from 'lucide-react'
+import { Home, FileText, Pill, QrCode, Bell, Settings, AlertTriangle, Hash, Calendar, Clock, FlaskConical } from 'lucide-react'
 import Sidebar from '../../components/layout/Sidebar.jsx'
 import PageShell from '../../components/layout/PageShell.jsx'
+import BlockchainBadge from '../../components/BlockchainBadge.jsx'
 import { patientApi } from '../../lib/api.js'
 import './Dashboard.css'
 
@@ -17,15 +18,17 @@ const sidebarItems = [
 export default function PatientDashboard() {
   const [summary, setSummary] = useState(null)
   const [timeline, setTimeline] = useState([])
+  const [labOrders, setLabOrders] = useState([])
   const [error, setError] = useState('')
 
   useEffect(() => {
     let alive = true
-    Promise.all([patientApi.summary(), patientApi.records()])
-      .then(([summaryData, timelineData]) => {
+    Promise.all([patientApi.summary(), patientApi.records(), patientApi.labOrders()])
+      .then(([summaryData, timelineData, labOrderData]) => {
         if (!alive) return
         setSummary(summaryData)
         setTimeline(timelineData)
+        setLabOrders(labOrderData)
       })
       .catch((err) => alive && setError(err.message))
     return () => { alive = false }
@@ -34,7 +37,7 @@ export default function PatientDashboard() {
   const patient = summary?.patient || {}
   const activeMeds = patient.activeMedications || []
   const prescriptions = (summary?.recentPrescriptions || []).slice(0, 4)
-  const appointments = timeline.filter(event => event.type === 'APPOINTMENT').slice(0, 3)
+  const visits = timeline.filter(event => event.type === 'VISIT').slice(0, 3)
   const stats = useMemo(() => ([
     { label: 'Active Meds', value: String(activeMeds.length), icon: <Pill size={22} />, color: 'var(--color-primary-500)', bg: 'var(--color-primary-50)' },
     { label: 'Allergies', value: String((patient.allergies || []).length), icon: <AlertTriangle size={22} />, color: 'var(--color-moderate)', bg: 'var(--color-moderate-bg)' },
@@ -116,7 +119,7 @@ export default function PatientDashboard() {
                 <span>{rx.doctorId?.fullName || 'MedVault doctor'}</span>
                 <span className="prescriptions-table__drug">{(rx.medications || []).map(m => `${m.brandName || m.genericName} ${m.strength || ''}`).join(', ')}</span>
                 <span><span className={`badge badge-${rx.medications?.some(m => m.safetyChecks?.allergyConflict) ? 'severe' : 'safe'}`}>{rx.medications?.some(m => m.safetyChecks?.allergyConflict) ? 'alert' : 'clear'}</span></span>
-                <span className="badge badge-gold">{shortHash(rx.blockchain?.contentHash || rx.blockchainTxHash)}</span>
+                <span><BlockchainBadge record={rx} /></span>
               </div>
             ))}
           </div>
@@ -124,18 +127,18 @@ export default function PatientDashboard() {
 
         {/* Upcoming Appointments */}
         <motion.div className="card card--no-hover" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }} style={{ marginTop: 'var(--space-6)' }}>
-          <h3 className="dashboard__section-title">Upcoming Appointments</h3>
+          <h3 className="dashboard__section-title">Recent Visits</h3>
           <div className="appointments-list">
-            {appointments.length === 0 && <p style={{ color: 'var(--color-gray-600)', fontSize: 'var(--text-sm)' }}>No upcoming or recent appointments found.</p>}
-            {appointments.map((event) => {
+            {visits.length === 0 && <p style={{ color: 'var(--color-gray-600)', fontSize: 'var(--text-sm)' }}>No recent visits found.</p>}
+            {visits.map((event) => {
               const apt = event.data
               return (
               <div key={apt._id} className="appointment-item">
                 <div className="appointment-item__date">
                   <Calendar size={16} color="var(--color-primary-500)" />
-                  <span>{formatDate(apt.slotStart)}</span>
+                  <span>{formatDate(apt.startedAt)}</span>
                   <Clock size={14} color="var(--color-gray-400)" />
-                  <span className="appointment-item__time">{formatTime(apt.slotStart)}</span>
+                  <span className="appointment-item__time">{formatTime(apt.startedAt)}</span>
                 </div>
                 <div className="appointment-item__info">
                   <strong>{apt.doctorId?.fullName || 'Doctor'}</strong>
@@ -144,6 +147,19 @@ export default function PatientDashboard() {
                 </div>
               </div>
             )})}
+          </div>
+        </motion.div>
+
+        <motion.div className="card card--no-hover" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7 }} style={{ marginTop: 'var(--space-6)' }}>
+          <h3 className="dashboard__section-title"><FlaskConical size={18} /> Lab Orders</h3>
+          <div style={{ display: 'grid', gap: 'var(--space-3)' }}>
+            {labOrders.length === 0 && <p style={{ color: 'var(--color-gray-600)', fontSize: 'var(--text-sm)' }}>No lab orders yet.</p>}
+            {labOrders.slice(0, 4).map((order) => (
+              <div key={order._id} className="appointment-item">
+                <div><strong>{order.labId?.displayName || 'Lab order'}</strong><span style={{ display: 'block', fontSize: 'var(--text-xs)', color: 'var(--color-gray-500)' }}>{(order.tests || []).map((test) => test.displayName).join(', ')}</span></div>
+                <span className="badge badge-teal">{order.status}</span>
+              </div>
+            ))}
           </div>
         </motion.div>
       </div>
@@ -165,7 +181,3 @@ function formatTime(value) {
   return new Date(value).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })
 }
 
-function shortHash(value) {
-  if (!value) return 'Pending'
-  return `${value.slice(0, 8)}...${value.slice(-4)}`
-}

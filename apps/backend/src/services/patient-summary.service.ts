@@ -132,6 +132,9 @@ export async function buildPatientSummary(patientId: string, viewerDoctorId?: st
   const adherence = computeAdherence(prescriptions)
   const labTrends = extractLabTrends(labs)
   const latestVisit = visits[0]
+  const visitsWithDoctor = viewerDoctorId
+    ? visits.filter((visit) => visit.doctorId?.toString() === viewerDoctorId).length
+    : undefined
   const summary: Record<string, unknown> = {
     patient: {
       id: patient._id,
@@ -151,6 +154,7 @@ export async function buildPatientSummary(patientId: string, viewerDoctorId?: st
       medicationTimeline: buildMedicationTimeline(prescriptions),
       adherence,
       lastVisitAt: latestVisit?.startedAt,
+      visitsWithDoctor,
     },
     labTrends,
     recentPrescriptions: prescriptions.slice(0, 5),
@@ -167,12 +171,27 @@ export async function buildPatientSummary(patientId: string, viewerDoctorId?: st
     activeMedications: patient.activeMedications || [],
     labTrends,
     stats: summary.stats,
+    totalVisits: visits.length,
+    lastVisit: latestVisit?.startedAt,
+    visitsWithDoctor,
     currentSymptoms: latestVisit?.preVisitSymptoms?.rawText,
   })
   summary.aiSummaryParagraph = aiSummary.summary
 
   if (latestVisit?.preVisitSymptoms?.extractedEntities?.length) {
-    const recurrence = await aiClient.checkRecurrence(patientId, latestVisit.preVisitSymptoms.extractedEntities)
+    const pastPresentations = visits
+      .filter((visit) => (
+        visit._id.toString() !== latestVisit._id.toString()
+        && visit.status === 'COMPLETED'
+        && !!visit.preVisitSymptoms?.extractedEntities?.length
+      ))
+      .map((visit) => ({
+        visitId: visit._id.toString(),
+        date: visit.startedAt,
+        entities: visit.preVisitSymptoms?.extractedEntities || [],
+        rawText: visit.preVisitSymptoms?.rawText,
+      }))
+    const recurrence = await aiClient.checkRecurrence(patientId, latestVisit.preVisitSymptoms.extractedEntities, pastPresentations)
     summary.symptomRecurrence = recurrence.recurring_presentations
   }
 

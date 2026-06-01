@@ -1,20 +1,20 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { Shield, User, Stethoscope, ShoppingBag, Eye, EyeOff, ArrowRight } from 'lucide-react'
+import { Shield, User, Stethoscope, FlaskConical, Eye, EyeOff, ArrowRight } from 'lucide-react'
 import './Auth.css'
 
 const roles = [
   { id: 'patient', label: 'Patient', icon: <User size={20} /> },
   { id: 'doctor', label: 'Doctor', icon: <Stethoscope size={20} /> },
-  { id: 'pharmacy', label: 'Pharmacy', icon: <ShoppingBag size={20} /> },
+  { id: 'lab', label: 'Lab', icon: <FlaskConical size={20} /> },
 ]
 
 export default function Login() {
   const [role, setRole] = useState('patient')
   const [showPassword, setShowPassword] = useState(false)
 
-  const dashboardRoutes = { patient: '/patient/dashboard', doctor: '/doctor/dashboard', pharmacy: '/pharmacy/scan' }
+  const dashboardRoutes = { patient: '/patient/dashboard', doctor: '/doctor/dashboard', lab: '/lab/dashboard' }
 
   return (
     <div className="auth-page">

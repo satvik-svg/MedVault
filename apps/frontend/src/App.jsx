@@ -13,9 +13,17 @@ import DoctorPortal from './pages/doctor/DoctorPortal.jsx'
 import PrescriptionWriter from './pages/doctor/PrescriptionWriter.jsx'
 import QRScanner from './pages/doctor/QRScanner.jsx'
 import DrugChecker from './pages/doctor/DrugChecker.jsx'
-import PharmacyGate from './pages/pharmacy/PharmacyGate.jsx'
+import PatientQuickView from './pages/doctor/PatientQuickView.jsx'
+import OrderTests from './pages/doctor/OrderTests.jsx'
 import AdminDashboard from './pages/admin/AdminDashboard.jsx'
-import ClinicDashboard from './pages/clinic/ClinicDashboard.jsx'
+import DoctorOnboarding from './pages/admin/DoctorOnboarding.jsx'
+import LabOnboarding from './pages/admin/LabOnboarding.jsx'
+import LabDashboard from './pages/lab/LabDashboard.jsx'
+import LabOrders from './pages/lab/LabOrders.jsx'
+import LabOrderDetail from './pages/lab/LabOrderDetail.jsx'
+import LabUploadReport from './pages/lab/LabUploadReport.jsx'
+import VerifyPrescription from './pages/verify/VerifyPrescription.jsx'
+import VerifyLabReport from './pages/verify/VerifyLabReport.jsx'
 
 function App() {
   return (
@@ -46,9 +54,17 @@ function App() {
           <Route path="/doctor/prescribe" element={<PrescriptionWriter />} />
           <Route path="/doctor/scan" element={<QRScanner />} />
           <Route path="/doctor/drug-checker" element={<DrugChecker />} />
-          <Route path="/pharmacy/scan" element={<PharmacyGate />} />
+          <Route path="/doctor/patient/:patientId" element={<PatientQuickView />} />
+          <Route path="/doctor/order-tests/:patientId" element={<OrderTests />} />
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
-          <Route path="/clinic/dashboard" element={<ClinicDashboard />} />
+          <Route path="/admin/onboarding/doctor/new" element={<DoctorOnboarding />} />
+          <Route path="/admin/onboarding/lab/new" element={<LabOnboarding />} />
+          <Route path="/lab/dashboard" element={<LabDashboard />} />
+          <Route path="/lab/orders" element={<LabOrders />} />
+          <Route path="/lab/orders/:orderId" element={<LabOrderDetail />} />
+          <Route path="/lab/upload-report" element={<LabUploadReport />} />
+          <Route path="/verify/prescription/:id" element={<VerifyPrescription />} />
+          <Route path="/verify/lab-report/:id" element={<VerifyLabReport />} />
         </Routes>
       </AnimatePresence>
     </>

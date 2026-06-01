@@ -4,7 +4,7 @@ import {
   Shield, ShieldCheck, Stethoscope, QrCode, Activity, Zap,
   Heart, Brain, Baby, ArrowUpRight, Star, Quote,
   Smartphone, Bot, Clock, ChevronRight, Users, FileText,
-  AlertTriangle, CheckCircle, Phone, Calendar, Search,
+  AlertTriangle, CheckCircle, FlaskConical, Calendar, Search,
   ArrowRight, Sparkles
 } from 'lucide-react'
 import Navbar from '../components/layout/Navbar.jsx'
@@ -29,7 +29,6 @@ const services = [
   { icon: <Brain size={32} />, name: 'AI Diagnosis', desc: 'Symptom analysis with XGBoost, calibrated for Indian diseases — Dengue, Typhoid, Malaria and more.', color: '#7c3aed' },
   { icon: <FileText size={32} />, name: 'Health Records', desc: 'Unified timeline of all records, labs, and prescriptions. Blockchain-verified and tamper-proof.', color: '#0ea5e9' },
   { icon: <Zap size={32} />, name: 'Lab Report OCR', desc: 'Photograph any paper report — structured data extracted in seconds via AI OCR pipeline.', color: '#f59e0b' },
-  { icon: <AlertTriangle size={32} />, name: 'Emergency Access', desc: 'One QR scan reveals critical info — blood group, allergies, active meds — without login.', color: '#dc2626' },
   { icon: <Smartphone size={32} />, name: 'WhatsApp Integration', desc: 'Records and medication reminders delivered directly to patient WhatsApp.', color: '#16a34a' },
 ]
 
@@ -122,7 +121,7 @@ function HeroSection() {
 
 function QuickAccess() {
   const items = [
-    { icon: <Phone size={28} />, title: 'Emergency', desc: '24/7 emergency support with drug safety protocols', color: '#dc2626', bg: '#fef2f2' },
+    { icon: <FlaskConical size={28} />, title: 'Lab Network', desc: 'Order tests through verified partner labs and track reports', color: '#0f766e', bg: '#ecfdf5' },
     { icon: <Calendar size={28} />, title: 'Book Appointment', desc: 'Schedule with verified doctors across specialties', color: 'var(--color-primary-600)', bg: 'var(--color-primary-50)' },
     { icon: <Search size={28} />, title: 'Find Doctor', desc: 'Search by specialty, location, or availability', color: 'var(--color-secondary-600)', bg: '#eff6ff' },
   ]

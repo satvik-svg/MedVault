@@ -40,8 +40,8 @@ export async function checkOrRequestConsent(
   granteeUserId: string,
   context: {
     scope: ConsentScope[]
-    purpose: 'CONSULTATION' | 'LAB_REVIEW' | 'PHARMACY_FULFILLMENT' | 'EMERGENCY' | 'OTHER'
-    granteeType?: 'DOCTOR' | 'LAB' | 'PHARMACY'
+    purpose: 'CONSULTATION' | 'LAB_REVIEW' | 'OTHER'
+    granteeType?: 'DOCTOR' | 'LAB'
   }
 ): Promise<ConsentDecision> {
   const patient = await Patient.findById(patientId)

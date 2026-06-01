@@ -5,6 +5,7 @@ from pathlib import Path
 from fastapi import APIRouter, File, UploadFile
 from pydantic import BaseModel
 
+from ...ocr.lab_report_pipeline import LabReportOCRPipeline
 from ...ocr.pipeline import OCRPipeline
 
 router = APIRouter()
@@ -35,5 +36,30 @@ async def ocr_prescription_base64(payload: Base64OCRInput) -> dict[str, object]:
         path = Path(tmp.name)
     try:
         return await OCRPipeline().process_prescription(str(path))
+    finally:
+        path.unlink(missing_ok=True)
+
+
+@router.post("/ocr/lab-report")
+async def ocr_lab_report(image: UploadFile = File(...)) -> dict[str, object]:
+    suffix = Path(image.filename or "lab-report.jpg").suffix or ".jpg"
+    with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as tmp:
+        tmp.write(await image.read())
+        tmp.flush()
+        path = Path(tmp.name)
+    try:
+        return await LabReportOCRPipeline().process_lab_report(str(path))
+    finally:
+        path.unlink(missing_ok=True)
+
+
+@router.post("/ocr/lab-report/base64")
+async def ocr_lab_report_base64(payload: Base64OCRInput) -> dict[str, object]:
+    with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as tmp:
+        tmp.write(base64.b64decode(payload.image_base64))
+        tmp.flush()
+        path = Path(tmp.name)
+    try:
+        return await LabReportOCRPipeline().process_lab_report(str(path))
     finally:
         path.unlink(missing_ok=True)

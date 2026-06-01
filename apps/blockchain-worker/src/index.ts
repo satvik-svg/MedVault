@@ -2,6 +2,7 @@ import { Worker } from 'bullmq'
 import { connectDatabase } from './db.ts'
 import { config } from './config.ts'
 import { anchorFulfillment } from './workers/anchor-fulfillment.worker.ts'
+import { anchorLabReport } from './workers/anchor-lab-report.worker.ts'
 import { anchorPrescription } from './workers/anchor-prescription.worker.ts'
 
 await connectDatabase()
@@ -12,6 +13,8 @@ const worker = new Worker(
     switch (job.name) {
       case 'anchor-prescription':
         return anchorPrescription(job)
+      case 'anchor-lab-report':
+        return anchorLabReport(job)
       case 'anchor-fulfillment':
         return anchorFulfillment(job)
       default:

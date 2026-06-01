@@ -1,4 +1,5 @@
 import type { IPrescription } from '../models/Prescription.ts'
+import type { ILabReport } from '../models/LabReport.ts'
 
 function objectIdToString(value: unknown): string {
   if (value && typeof value === 'object' && 'toString' in value) {
@@ -38,6 +39,36 @@ export function canonicalizePrescriptionForHashing(prescription: IPrescription):
       .map((order) => order.loincCode || order.displayName || '')
       .filter(Boolean)
       .sort(),
+  }
+
+  return JSON.stringify(canonical)
+}
+
+export function canonicalizeLabReportForHashing(labReport: ILabReport): string {
+  const reportDate = labReport.reportDate instanceof Date
+    ? labReport.reportDate.toISOString()
+    : new Date(labReport.reportDate).toISOString()
+  const collectionDate = labReport.collectionDate
+    ? labReport.collectionDate instanceof Date
+      ? labReport.collectionDate.toISOString()
+      : new Date(labReport.collectionDate).toISOString()
+    : null
+
+  const canonical = {
+    reportNumber: labReport.reportNumber || '',
+    patientId: objectIdToString(labReport.patientId),
+    labId: labReport.labId ? objectIdToString(labReport.labId) : '',
+    orderedByDoctorId: labReport.orderedByDoctorId ? objectIdToString(labReport.orderedByDoctorId) : null,
+    collectionDate,
+    reportDate,
+    results: (labReport.results || [])
+      .map((result) => ({
+        loinc: result.loincCode || '',
+        testName: result.testName || '',
+        value: String(result.value ?? ''),
+        unit: result.unit || '',
+      }))
+      .sort((a, b) => (a.loinc || a.testName).localeCompare(b.loinc || b.testName)),
   }
 
   return JSON.stringify(canonical)

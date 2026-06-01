@@ -3,12 +3,12 @@ import mongoose, { Schema, type Document, type ObjectId } from 'mongoose'
 export interface IConsent extends Document {
   patientId: ObjectId
   granteeUserId: ObjectId
-  granteeType: 'DOCTOR' | 'LAB' | 'PHARMACY'
+  granteeType: 'DOCTOR' | 'LAB'
   scope: Array<'FULL' | 'PRESCRIPTIONS' | 'LAB_REPORTS' | 'DIAGNOSES' | 'ALLERGIES_AND_CONDITIONS' | 'DEMOGRAPHICS'>
   grantedAt: Date
   expiresAt: Date
   status: 'ACTIVE' | 'EXPIRED' | 'REVOKED' | 'AUTO_RENEWED'
-  grantMethod: 'EXPLICIT_WHATSAPP' | 'AUTO_RECENT_DOCTOR' | 'EMERGENCY_QR'
+  grantMethod: 'EXPLICIT_WHATSAPP' | 'AUTO_RECENT_DOCTOR'
   revokedAt?: Date
   revokedReason?: string
   nonce: string
@@ -19,7 +19,7 @@ export interface IConsent extends Document {
 const ConsentSchema = new Schema<IConsent>({
   patientId: { type: Schema.Types.ObjectId, ref: 'Patient', required: true, index: true },
   granteeUserId: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
-  granteeType: { type: String, enum: ['DOCTOR', 'LAB', 'PHARMACY'], required: true },
+  granteeType: { type: String, enum: ['DOCTOR', 'LAB'], required: true },
 
   scope: [{
     type: String,
@@ -38,7 +38,7 @@ const ConsentSchema = new Schema<IConsent>({
 
   grantMethod: {
     type: String,
-    enum: ['EXPLICIT_WHATSAPP', 'AUTO_RECENT_DOCTOR', 'EMERGENCY_QR'],
+    enum: ['EXPLICIT_WHATSAPP', 'AUTO_RECENT_DOCTOR'],
   },
 
   revokedAt: Date,

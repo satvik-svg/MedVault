@@ -38,6 +38,16 @@ export const api = {
     return res.json()
   },
 
+  patch: async (endpoint, data) => {
+    const res = await fetch(`${API_BASE}${endpoint}`, {
+      method: 'PATCH',
+      headers: getHeaders(),
+      body: JSON.stringify(data),
+    })
+    if (!res.ok) throw new Error((await readError(res)) || `PATCH ${endpoint} failed: ${res.status}`)
+    return res.json()
+  },
+
   delete: async (endpoint) => {
     const res = await fetch(`${API_BASE}${endpoint}`, {
       method: 'DELETE',
@@ -72,7 +82,9 @@ export const patientApi = {
   prescriptions: () => api.get('/patient/prescriptions'),
   activeMedications: () => api.get('/patient/prescriptions/active'),
   labReports: () => api.get('/patient/lab-reports'),
-  emergencyQR: () => api.get('/patient/qr/emergency'),
+  labOrders: () => api.get('/patient/me/lab-orders'),
+  quickView: (patientId) => api.get(`/patient/${patientId}/quick-view`),
+  recordPreVisitSymptoms: (data) => api.post('/patient/me/pre-visit-symptoms', data),
 }
 
 export const doctorApi = {
@@ -87,6 +99,36 @@ export const doctorApi = {
   patients: () => api.get('/doctor/patients'),
 }
 
+export const labApi = {
+  me: () => api.get('/lab/me'),
+  pendingOrders: () => api.get('/lab/orders/pending'),
+  order: (orderId) => api.get(`/lab/orders/${orderId}`),
+  updateOrderStatus: (orderId, newStatus, note) => api.patch(`/lab/orders/${orderId}/status`, { newStatus, note }),
+  uploadOrderReport: (orderId, data) => api.post(`/lab/orders/${orderId}/upload-report`, data),
+  uploadReport: (data) => api.post('/lab/upload', data),
+  verifyReport: (reportId) => api.get(`/lab-reports/${reportId}/verify`),
+}
+
+export const onboardingApi = {
+  doctor: (data) => api.post('/onboarding/doctor', data),
+  lab: (data) => api.post('/onboarding/lab', data),
+  initiatePatient: (phoneNumber) => api.post('/onboarding/patient/initiate', { phoneNumber }),
+  completePatient: (data) => api.post('/onboarding/patient/complete', data),
+}
+
+export const publicVerifyApi = {
+  prescription: async (id) => {
+    const res = await fetch(`${API_BASE.replace(/\/api$/, '')}/verify/prescription/${id}`)
+    if (!res.ok) throw new Error((await readError(res)) || 'Prescription verification failed')
+    return res.json()
+  },
+  labReport: async (id) => {
+    const res = await fetch(`${API_BASE.replace(/\/api$/, '')}/verify/lab-report/${id}`)
+    if (!res.ok) throw new Error((await readError(res)) || 'Lab report verification failed')
+    return res.json()
+  },
+}
+
 export const recordsApi = {
   upload: (formData) =>
     fetch(`${API_BASE}/records/upload`, {
@@ -99,21 +141,8 @@ export const recordsApi = {
   delete: (recordId) => api.delete(`/records/${recordId}`),
 }
 
-export const qrApi = {
-  generateEmergency: () => api.post('/emergency-qr/generate', {}),
-  activeEmergency: () => api.get('/emergency-qr/active'),
-  scanEmergency: (signedPayload, scannerLocation, facilityName) =>
-    api.post('/emergency-qr/scan', { signedPayload, scannerLocation, facilityName }),
-  revokeEmergency: (nonce, reason) => api.post(`/emergency-qr/revoke/${nonce}`, { reason }),
-}
-
 export const aiApi = {
   drugCheck: (patientId, medication) => doctorApi.interactionCheck(patientId, medication),
-}
-
-export const pharmacyApi = {
-  scanPrescription: (qrData) => api.post('/pharmacy/scan-prescription', { qrData }),
-  dispense: (prescriptionId, data) => api.post(`/pharmacy/dispense/${prescriptionId}`, data),
 }
 
 export default api

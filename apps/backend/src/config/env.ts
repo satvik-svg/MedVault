@@ -10,6 +10,10 @@ export const config = {
     uri: process.env.MONGODB_URI || 'mongodb://localhost:27017/medvault',
   },
 
+  database: {
+    url: process.env.DATABASE_URL || process.env.POSTGRES_URL || '',
+  },
+
   redis: {
     url: process.env.REDIS_URL || 'redis://localhost:6379',
   },
@@ -23,7 +27,6 @@ export const config = {
 
   qr: {
     hmacSecret: process.env.QR_HMAC_SECRET || 'change-me-32-bytes-min',
-    emergencyQrTtlDays: parseInt(process.env.EMERGENCY_QR_TTL_DAYS || '90', 10),
   },
 
   twilio: {
@@ -61,7 +64,7 @@ export const config = {
     auditNetwork: process.env.BLOCKCHAIN_NETWORK || 'sepolia',
     rpcUrl: process.env.POLYGON_RPC_URL || process.env.SEPOLIA_RPC_URL || '',
     privateKey: process.env.BLOCKCHAIN_PRIVATE_KEY || '',
-    contractAddress: process.env.PRESCRIPTION_AUDIT_CONTRACT_ADDRESS || '',
+    contractAddress: process.env.PRESCRIPTION_AUDIT_CONTRACT_ADDRESS || '0x532092fE865B3D96182083BeDE30E1a6C79BDcbB',
     hashSalt: process.env.BLOCKCHAIN_HASH_SALT || process.env.JWT_ACCESS_SECRET || 'change-me-32-bytes-min',
     explorerBaseUrl: process.env.BLOCKCHAIN_EXPLORER_BASE_URL || 'https://sepolia.etherscan.io',
   },

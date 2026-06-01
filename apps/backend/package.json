@@ -7,11 +7,15 @@
     "dev": "tsx watch src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
+    "db:init:neon": "node scripts/init-neon-schema.mjs",
+    "prisma:generate": "prisma generate",
+    "prisma:push": "prisma db push",
     "seed:references": "tsx src/scripts/seed-reference-data.ts",
     "test": "vitest run",
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@prisma/client": "^6.18.0",
     "axios": "^1.7.0",
     "bcrypt": "^5.1.1",
     "bullmq": "^5.8.0",
@@ -23,6 +27,7 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.4.0",
     "ms": "^2.1.3",
+    "pg": "^8.21.0",
     "twilio": "^5.2.0",
     "uuid": "^10.0.0"
   },
@@ -35,6 +40,7 @@
     "@types/node": "^20.14.0",
     "@types/supertest": "^6.0.2",
     "@types/uuid": "^10.0.0",
+    "prisma": "^6.18.0",
     "supertest": "^7.0.0",
     "tsx": "^4.16.0",
     "typescript": "~5.7.0",

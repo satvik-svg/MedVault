@@ -114,8 +114,14 @@ export async function saveExternalLabUpload(input: {
   fileType: string
   reportDate?: Date
   ocrText?: string
+  results?: LabResultInput[]
+  structuredData?: Record<string, unknown>
   aiConfidence?: number
 }): Promise<ILabReport> {
+  const results = detectAbnormalities(input.results || [])
+  const hasCriticalValues = results.some((result) => ['CRITICAL_LOW', 'CRITICAL_HIGH'].includes(result.flag || ''))
+  const hasAbnormalValues = hasCriticalValues || results.some((result) => ['LOW', 'HIGH', 'ABNORMAL'].includes(result.flag || ''))
+
   return LabReport.create({
     patientId: input.patientId,
     uploadedByUserId: input.uploadedByUserId,
@@ -123,11 +129,12 @@ export async function saveExternalLabUpload(input: {
     fileUrl: input.fileUrl,
     fileType: input.fileType,
     reportDate: input.reportDate || new Date(),
-    results: [],
-    hasAbnormalValues: false,
-    hasCriticalValues: false,
+    results,
+    hasAbnormalValues,
+    hasCriticalValues,
     attachmentUrls: [input.fileUrl],
     ocrText: input.ocrText,
+    structuredData: input.structuredData,
     aiConfidence: input.aiConfidence,
     isVerified: false,
     externalUpload: {

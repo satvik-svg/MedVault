@@ -2,7 +2,7 @@ import mongoose, { Schema, type Document, type ObjectId } from 'mongoose'
 
 export interface IVisit extends Document {
   patientId: ObjectId
-  doctorId: ObjectId
+  doctorId?: ObjectId
   startedAt: Date
   endedAt?: Date
   status: 'CHECKED_IN' | 'IN_CONSULTATION' | 'COMPLETED' | 'CANCELLED'
@@ -31,7 +31,7 @@ export interface IVisit extends Document {
 
 const VisitSchema = new Schema<IVisit>({
   patientId: { type: Schema.Types.ObjectId, ref: 'Patient', required: true, index: true },
-  doctorId: { type: Schema.Types.ObjectId, ref: 'Doctor', required: true, index: true },
+  doctorId: { type: Schema.Types.ObjectId, ref: 'Doctor', index: true },
   startedAt: { type: Date, required: true, default: Date.now, index: true },
   endedAt: Date,
   status: {

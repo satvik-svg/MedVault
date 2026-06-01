@@ -1,6 +1,7 @@
 import { Router, type Router as RouterType } from 'express'
+import { LabReport } from '../models/LabReport.ts'
 import { Prescription } from '../models/Prescription.ts'
-import { verifyPrescriptionAnchoring } from '../services/blockchain-verification.service.ts'
+import { verifyLabReportAnchoring, verifyPrescriptionAnchoring } from '../services/blockchain-verification.service.ts'
 import { computeAge } from '../utils/time.ts'
 
 const router: RouterType = Router()
@@ -30,6 +31,45 @@ router.get('/prescription/:id', async (req, res) => {
         drug: medication.brandName || medication.genericName,
         strength: medication.strength,
         dosage: medication.dosage?.customInstructions || medication.dosage?.frequency,
+      })),
+      blockchain: {
+        anchored: blockchain.verified || !!blockchain.txHash,
+        txHash: blockchain.txHash,
+        explorerUrl: blockchain.explorerUrl,
+        tampered: blockchain.tampered,
+      },
+    })
+  } catch (error) {
+    res.status(400).json({ valid: false, reason: error instanceof Error ? error.message : 'Verification failed' })
+  }
+})
+
+router.get('/lab-report/:id', async (req, res) => {
+  try {
+    const labReport = await LabReport.findById(req.params.id)
+      .populate('labId')
+      .populate('patientId')
+    if (!labReport) return res.status(404).json({ valid: false, reason: 'Not found' })
+
+    const lab = labReport.labId as any
+    const patient = labReport.patientId as any
+    const blockchain = await verifyLabReportAnchoring(req.params.id)
+
+    res.json({
+      valid: true,
+      reportNumber: labReport.reportNumber,
+      reportDate: labReport.reportDate,
+      lab: {
+        name: lab?.displayName,
+        verified: lab?.trustLevel === 'VERIFIED',
+      },
+      patientNameAndAge: patient ? `${patient.fullName}, ${computeAge(patient.dateOfBirth)}` : undefined,
+      results: (labReport.results || []).map((result) => ({
+        testName: result.testName,
+        loincCode: result.loincCode,
+        value: result.value,
+        unit: result.unit,
+        flag: result.flag,
       })),
       blockchain: {
         anchored: blockchain.verified || !!blockchain.txHash,

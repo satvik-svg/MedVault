@@ -11,9 +11,9 @@ import {
   onboardingRoutes,
   visitRoutes,
   labOrderRoutes,
+  labReportRoutes,
   prescriptionRoutes,
   labRoutes,
-  emergencyQrRoutes,
   verifyRoutes,
 } from './routes/index.ts'
 
@@ -33,9 +33,9 @@ app.use('/api/admin', adminRoutes)
 app.use('/api/onboarding', onboardingRoutes)
 app.use('/api/visits', visitRoutes)
 app.use('/api/lab-orders', labOrderRoutes)
+app.use('/api/lab-reports', labReportRoutes)
 app.use('/api/prescriptions', prescriptionRoutes)
 app.use('/api/lab', labRoutes)
-app.use('/api/emergency-qr', emergencyQrRoutes)
 app.use('/verify', verifyRoutes)
 
 // Health check

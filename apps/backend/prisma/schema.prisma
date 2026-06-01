@@ -1,0 +1,241 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  phoneNumber        String?  @unique @map("phone_number")
+  email              String?  @unique
+  passwordHash       String?  @map("password_hash")
+  role               String
+  patientId          String?  @map("patient_id") @db.Uuid
+  doctorId           String?  @map("doctor_id") @db.Uuid
+  labId              String?  @map("lab_id") @db.Uuid
+  isActive           Boolean  @default(true) @map("is_active")
+  mustChangePassword Boolean  @default(false) @map("must_change_password")
+  createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt          DateTime @default(now()) @map("updated_at") @db.Timestamptz
+
+  patient Patient?
+  doctor  Doctor?
+
+  @@map("users")
+}
+
+model Patient {
+  id                String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId            String?     @unique @map("user_id") @db.Uuid
+  medvaultId        String      @unique @map("medvault_id")
+  abhaId            String?     @unique @map("abha_id")
+  abhaAddress       String?     @map("abha_address")
+  fullName          String      @map("full_name")
+  dateOfBirth       DateTime    @map("date_of_birth") @db.Date
+  sex               String
+  bloodGroup        String?     @map("blood_group")
+  contact           Json        @default("{}")
+  allergies         Json        @default("[]")
+  chronicConditions Json        @default("[]") @map("chronic_conditions")
+  activeMedications Json        @default("[]") @map("active_medications")
+  onboarding        Json        @default("{}")
+  stats             Json        @default("{}")
+  deletedAt         DateTime?   @map("deleted_at") @db.Timestamptz
+  createdAt         DateTime    @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt         DateTime    @default(now()) @map("updated_at") @db.Timestamptz
+
+  user          User?          @relation(fields: [userId], references: [id])
+  visits        Visit[]
+  prescriptions Prescription[]
+  labOrders     LabOrder[]
+  labReports    LabReport[]
+
+  @@map("patients")
+}
+
+model Doctor {
+  id                  String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId              String?  @unique @map("user_id") @db.Uuid
+  fullName            String   @map("full_name")
+  nmcRegNumber        String   @unique @map("nmc_reg_number")
+  stateMedicalCouncil String?  @map("state_medical_council")
+  specializations     Json     @default("[]")
+  qualifications      Json     @default("[]")
+  practice            Json     @default("{}")
+  verification        Json     @default("{}")
+  trustLevel          String   @default("PENDING") @map("trust_level")
+  createdAt           DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt           DateTime @default(now()) @map("updated_at") @db.Timestamptz
+
+  user          User?          @relation(fields: [userId], references: [id])
+  visits        Visit[]
+  prescriptions Prescription[]
+  labOrders     LabOrder[]
+  labReports    LabReport[]
+
+  @@map("doctors")
+}
+
+model Lab {
+  id                      String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  legalName               String?     @map("legal_name")
+  displayName             String      @map("display_name")
+  phone                   String?
+  email                   String?
+  gstin                   String?     @unique
+  nablAccreditationNumber String?     @map("nabl_accreditation_number")
+  address                 Json        @default("{}")
+  testsOffered            Json        @default("[]") @map("tests_offered")
+  trustLevel              String      @default("PENDING") @map("trust_level")
+  isActive                Boolean     @default(true) @map("is_active")
+  verification            Json        @default("{}")
+  createdAt               DateTime    @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt               DateTime    @default(now()) @map("updated_at") @db.Timestamptz
+
+  labOrders  LabOrder[]
+  labReports LabReport[]
+
+  @@map("labs")
+}
+
+model Visit {
+  id                String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  patientId         String      @map("patient_id") @db.Uuid
+  doctorId          String?     @map("doctor_id") @db.Uuid
+  startedAt         DateTime    @default(now()) @map("started_at") @db.Timestamptz
+  endedAt           DateTime?   @map("ended_at") @db.Timestamptz
+  status            String      @default("CHECKED_IN")
+  type              String      @default("WALK_IN")
+  chiefComplaint    String?     @map("chief_complaint")
+  preVisitSymptoms  Json        @default("{}") @map("pre_visit_symptoms")
+  doctorNotes       String?     @map("doctor_notes")
+  prescriptionId    String?     @map("prescription_id") @db.Uuid
+  labOrderIds       String[]    @default([]) @map("lab_order_ids") @db.Uuid
+  createdBy         String?     @map("created_by") @db.Uuid
+  createdAt         DateTime    @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt         DateTime    @default(now()) @map("updated_at") @db.Timestamptz
+
+  patient       Patient        @relation(fields: [patientId], references: [id])
+  doctor        Doctor?        @relation(fields: [doctorId], references: [id])
+  prescriptions Prescription[]
+  labOrders     LabOrder[]
+
+  @@map("visits")
+}
+
+model Prescription {
+  id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  prescriptionNumber String?  @unique @map("prescription_number")
+  patientId          String   @map("patient_id") @db.Uuid
+  doctorId           String?  @map("doctor_id") @db.Uuid
+  visitId            String?  @map("visit_id") @db.Uuid
+  diagnosis          Json     @default("[]")
+  medications        Json     @default("[]")
+  labOrders          Json     @default("[]") @map("lab_orders")
+  blockchain         Json     @default("{\"status\":\"NOT_QUEUED\"}")
+  blockchainTxHash   String?  @map("blockchain_tx_hash")
+  issuedAt           DateTime? @map("issued_at") @db.Timestamptz
+  createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt          DateTime @default(now()) @map("updated_at") @db.Timestamptz
+
+  patient Patient @relation(fields: [patientId], references: [id])
+  doctor  Doctor? @relation(fields: [doctorId], references: [id])
+  visit   Visit?  @relation(fields: [visitId], references: [id])
+
+  @@map("prescriptions")
+}
+
+model LabOrder {
+  id                  String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orderNumber         String?  @unique @map("order_number")
+  patientId           String   @map("patient_id") @db.Uuid
+  doctorId            String?  @map("doctor_id") @db.Uuid
+  visitId             String?  @map("visit_id") @db.Uuid
+  labId               String?  @map("lab_id") @db.Uuid
+  tests               Json     @default("[]")
+  status              String   @default("CREATED")
+  statusHistory       Json     @default("[]") @map("status_history")
+  totalEstimatedPrice Decimal? @map("total_estimated_price") @db.Decimal(12, 2)
+  labReportId         String?  @map("lab_report_id") @db.Uuid
+  createdAt           DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt           DateTime @default(now()) @map("updated_at") @db.Timestamptz
+
+  patient Patient @relation(fields: [patientId], references: [id])
+  doctor  Doctor? @relation(fields: [doctorId], references: [id])
+  visit   Visit?  @relation(fields: [visitId], references: [id])
+  lab     Lab?    @relation(fields: [labId], references: [id])
+
+  @@map("lab_orders")
+}
+
+model LabReport {
+  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  reportNumber      String?  @unique @map("report_number")
+  patientId         String   @map("patient_id") @db.Uuid
+  labId             String?  @map("lab_id") @db.Uuid
+  labOrderId        String?  @map("lab_order_id") @db.Uuid
+  orderedByDoctorId String?  @map("ordered_by_doctor_id") @db.Uuid
+  source            String   @default("MEDVAULT_NATIVE_LAB_PARTNER")
+  fileUrl           String?  @map("file_url")
+  fileType          String?  @map("file_type")
+  collectionDate    DateTime? @map("collection_date") @db.Timestamptz
+  reportDate        DateTime @default(now()) @map("report_date") @db.Timestamptz
+  results           Json     @default("[]")
+  hasAbnormalValues Boolean  @default(false) @map("has_abnormal_values")
+  hasCriticalValues Boolean  @default(false) @map("has_critical_values")
+  structuredData    Json?    @map("structured_data")
+  aiConfidence      Decimal? @map("ai_confidence") @db.Decimal(5, 4)
+  isVerified        Boolean  @default(false) @map("is_verified")
+  blockchain        Json     @default("{\"status\":\"NOT_QUEUED\"}")
+  blockchainTxHash  String?  @map("blockchain_tx_hash")
+  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt         DateTime @default(now()) @map("updated_at") @db.Timestamptz
+
+  patient Patient @relation(fields: [patientId], references: [id])
+  lab     Lab?    @relation(fields: [labId], references: [id])
+  doctor  Doctor? @relation(fields: [orderedByDoctorId], references: [id])
+
+  @@map("lab_reports")
+}
+
+model AccessLog {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  actorUserId String?  @map("actor_user_id") @db.Uuid
+  actorRole   String?  @map("actor_role")
+  action      String
+  targetType  String?  @map("target_type")
+  targetId    String?  @map("target_id") @db.Uuid
+  patientId   String?  @map("patient_id") @db.Uuid
+  metadata    Json     @default("{}")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  @@map("access_logs")
+}
+
+model RefDrug {
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  rxnormCui        String?  @unique @map("rxnorm_cui")
+  genericName      String   @map("generic_name")
+  brandNames       Json     @default("[]") @map("brand_names")
+  indianBrandNames Json     @default("[]") @map("indian_brand_names")
+  drugClass        String?  @map("drug_class")
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  @@map("ref_drugs")
+}
+
+model RefInteraction {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  drugACui       String   @map("drug_a_cui")
+  drugBCui       String   @map("drug_b_cui")
+  severity       String
+  clinicalEffect String?  @map("clinical_effect")
+  management     String?
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  @@unique([drugACui, drugBCui])
+  @@map("ref_interactions")
+}
