@@ -1,24 +1,24 @@
 {
-  "name": "medvault-app",
+  "name": "medvault",
   "private": true,
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc && vite build",
-    "preview": "vite preview"
+    "dev:backend": "pnpm --filter @medvault/backend dev",
+    "dev:mock": "pnpm --filter @medvault/abdm-mock dev",
+    "dev:frontend": "pnpm --filter @medvault/frontend dev",
+    "dev:ai": "cd apps/ai-service && uvicorn src.main:app --host 0.0.0.0 --port 8000 --workers 1",
+    "dev:blockchain-worker": "pnpm --filter @medvault/blockchain-worker dev",
+    "build:backend": "pnpm --filter @medvault/backend build",
+    "build:frontend": "pnpm --filter @medvault/frontend build",
+    "build:blockchain-worker": "pnpm --filter @medvault/blockchain-worker build",
+    "test:backend": "pnpm --filter @medvault/backend test",
+    "test:contracts": "pnpm --filter @medvault/blockchain-contracts test",
+    "seed:references": "pnpm --filter @medvault/backend seed:references",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down"
   },
   "devDependencies": {
-    "typescript": "~6.0.2",
-    "vite": "^8.0.10"
-  },
-  "dependencies": {
-    "date-fns": "^4.1.0",
-    "framer-motion": "^12.38.0",
-    "lucide-react": "^1.11.0",
-    "react-hot-toast": "^2.6.0",
-    "react-router-dom": "^7.14.2",
-    "recharts": "^3.8.1",
-    "zustand": "^5.0.12"
+    "typescript": "~5.7.0"
   }
 }

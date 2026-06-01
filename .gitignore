@@ -11,6 +11,20 @@ node_modules
 dist
 dist-ssr
 *.local
+__pycache__/
+*.py[cod]
+.pytest_cache/
+apps/ai-service/data/
+apps/ai-service/checkpoints/
+apps/ai-service/evaluation_results.json
+apps/blockchain-contracts/artifacts/
+apps/blockchain-contracts/cache/
+apps/blockchain-contracts/typechain-types/
+
+# Environment
+.env
+.env.local
+.env.*.local
 
 # Editor directories and files
 .vscode/*
@@ -22,3 +36,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Docker
+mongo-data/

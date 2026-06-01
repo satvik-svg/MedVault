@@ -1,0 +1,17 @@
+{
+  "name": "@medvault/blockchain-contracts",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "test": "hardhat test",
+    "compile": "hardhat compile",
+    "deploy:sepolia": "hardhat run scripts/deploy.ts --network sepolia",
+    "deploy:amoy": "hardhat run scripts/deploy.ts --network polygon_amoy"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "@openzeppelin/contracts": "^5.0.0",
+    "hardhat": "^2.22.0",
+    "typescript": "~5.7.0"
+  }
+}

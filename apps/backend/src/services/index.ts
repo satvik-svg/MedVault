@@ -1,0 +1,25 @@
+export {
+  patientSignup,
+  verifyOtpAndCreatePatient,
+  doctorSignup,
+  clinicSignup,
+  login,
+  refreshTokens,
+  logout,
+} from './auth.service.ts'
+export { searchDrugs, lookupDrugByCui } from './drug-lookup.service.ts'
+export { runMedicationSafetyChecks, hasBlockingSafetyIssue } from './safety-checks.service.ts'
+export type { MedicationInput, MedicationSafetyResult } from './safety-checks.service.ts'
+export { checkOrRequestConsent, resolveConsentRequest, assertActiveConsent } from './consent.service.ts'
+export type { ConsentDecision, ConsentScope } from './consent.service.ts'
+export { upsertDoctorAvailability, findAvailableSlots, bookAppointment, updateAppointmentStatus, processPreVisitSymptoms } from './appointment.service.ts'
+export { createPrescription, listPatientPrescriptions, checkMedicationForPrescription, cleanupExpiredMedications, updatePatientActiveMedications, SafetyCheckError } from './prescription.service.ts'
+export type { CreatePrescriptionInput } from './prescription.service.ts'
+export { scanPrescriptionQR, dispensePrescription } from './pharmacy.service.ts'
+export { uploadStructuredLabReport, listPatientLabReports, saveExternalLabUpload, detectAbnormalities } from './lab.service.ts'
+export type { LabResultInput } from './lab.service.ts'
+export { buildPatientTimeline, buildPatientSummary } from './patient-summary.service.ts'
+export { generateEmergencyQR, revokeEmergencyQR, scanEmergencyQR, sweepExpiredEmergencyQRs, GeoAnomalyError } from './emergency-qr.service.ts'
+export { uploadExternalPrescription, confirmExternalPrescription } from './external-prescription.service.ts'
+export { verifyPrescriptionAnchoring } from './blockchain-verification.service.ts'
+export { aiClient, AIClient } from './ai-client.service.ts'
