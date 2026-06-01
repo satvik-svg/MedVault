@@ -5,10 +5,12 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/server.ts",
+    "dev:backend": "pnpm dev",
     "build": "tsc",
     "start": "node dist/server.js",
     "db:init:neon": "node scripts/init-neon-schema.mjs",
     "prisma:generate": "prisma generate",
+    "prisma:validate": "node scripts/prisma-with-env.mjs validate",
     "prisma:push": "prisma db push",
     "seed:references": "tsx src/scripts/seed-reference-data.ts",
     "test": "vitest run",

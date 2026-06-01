@@ -1,11 +1,22 @@
 import { readFile } from 'node:fs/promises'
+import { existsSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { dirname, resolve } from 'node:path'
+import dotenv from 'dotenv'
 import pg from 'pg'
 
 const { Client } = pg
 const here = dirname(fileURLToPath(import.meta.url))
 const schemaPath = resolve(here, '../db/schema.sql')
+
+for (const envPath of [
+  resolve(process.cwd(), '.env'),
+  resolve(process.cwd(), '../../.env'),
+  resolve(here, '../../../.env'),
+]) {
+  if (existsSync(envPath)) dotenv.config({ path: envPath, override: false })
+}
+
 const connectionString = process.env.DATABASE_URL || process.env.POSTGRES_URL
 
 if (!connectionString) {

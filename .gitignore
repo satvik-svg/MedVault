@@ -1,4 +1,4 @@
-# Logs
+# Logs and diagnostics
 logs
 *.log
 npm-debug.log*
@@ -6,17 +6,39 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
+*.pid
+*.seed
+*.trace
+*.tsbuildinfo
 
+# Dependencies
 node_modules
+.pnpm-store/
+
+# Build output
 dist
 dist-ssr
+build/
+out/
+coverage/
 *.local
+
+# Python
+.venv/
+venv/
 __pycache__/
 *.py[cod]
+*.egg-info/
 .pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# AI/generated data
 apps/ai-service/data/
 apps/ai-service/checkpoints/
 apps/ai-service/evaluation_results.json
+
+# Blockchain generated output
 apps/blockchain-contracts/artifacts/
 apps/blockchain-contracts/cache/
 apps/blockchain-contracts/typechain-types/
@@ -25,12 +47,18 @@ apps/blockchain-contracts/typechain-types/
 .env
 .env.local
 .env.*.local
+!.env.example
+
+# Local planning/scratch folders
+chnges/
+implement_files/
 
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
 .idea
 .DS_Store
+**/.DS_Store
 *.suo
 *.ntvs*
 *.njsproj
@@ -39,3 +67,9 @@ apps/blockchain-contracts/typechain-types/
 
 # Docker
 mongo-data/
+redis-data/
+
+# Local caches
+.cache/
+.turbo/
+.vite/

@@ -1,6 +1,13 @@
 import dotenv from 'dotenv'
+import { existsSync } from 'node:fs'
+import { resolve } from 'node:path'
 
-dotenv.config()
+for (const envPath of [
+  resolve(process.cwd(), '.env'),
+  resolve(process.cwd(), '../../.env'),
+]) {
+  if (existsSync(envPath)) dotenv.config({ path: envPath, override: false })
+}
 
 export const config = {
   databaseUrl: process.env.DATABASE_URL || process.env.POSTGRES_URL || '',
