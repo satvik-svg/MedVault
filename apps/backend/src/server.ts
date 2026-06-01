@@ -8,11 +8,13 @@ import {
   clinicRoutes,
   doctorRoutes,
   adminRoutes,
-  appointmentRoutes,
+  onboardingRoutes,
+  visitRoutes,
+  labOrderRoutes,
   prescriptionRoutes,
-  pharmacyRoutes,
   labRoutes,
   emergencyQrRoutes,
+  verifyRoutes,
 } from './routes/index.ts'
 
 const app: Express = express()
@@ -28,11 +30,13 @@ app.use('/api/patient', patientRoutes)
 app.use('/api/clinic', clinicRoutes)
 app.use('/api/doctor', doctorRoutes)
 app.use('/api/admin', adminRoutes)
-app.use('/api/appointments', appointmentRoutes)
+app.use('/api/onboarding', onboardingRoutes)
+app.use('/api/visits', visitRoutes)
+app.use('/api/lab-orders', labOrderRoutes)
 app.use('/api/prescriptions', prescriptionRoutes)
-app.use('/api/pharmacy', pharmacyRoutes)
 app.use('/api/lab', labRoutes)
 app.use('/api/emergency-qr', emergencyQrRoutes)
+app.use('/verify', verifyRoutes)
 
 // Health check
 app.get('/api/health', (_req, res) => {

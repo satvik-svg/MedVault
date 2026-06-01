@@ -30,14 +30,6 @@ export async function enqueuePrescriptionAnchor(prescriptionId: string): Promise
   )
 }
 
-export async function enqueueFulfillmentAnchor(prescriptionId: string): Promise<void> {
-  await blockchainAuditQueue.add(
-    'anchor-fulfillment',
-    { prescriptionId },
-    { jobId: `rx-fulfillment-${prescriptionId}-${Date.now()}` }
-  )
-}
-
 export async function enqueueLabReportAnchor(labReportId: string): Promise<void> {
   await blockchainAuditQueue.add(
     'anchor-lab-report',

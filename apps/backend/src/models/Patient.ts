@@ -51,13 +51,10 @@ export interface IPatient extends Document {
     relationship?: string
     phone?: string
   }
-  activeEmergencyQrNonces: string[]
-  lastKnownLocation?: {
-    lat: number
-    lng: number
-    city?: string
-    country?: string
-    capturedAt: Date
+  onboarding?: {
+    method?: 'SELF_SIGNUP' | 'QUICK_REGISTER_BY_STAFF'
+    registeredBy?: ObjectId
+    profileCompletedAt?: Date
   }
   stats: {
     totalVisits: number
@@ -128,13 +125,10 @@ const PatientSchema = new Schema<IPatient>({
     phone: String,
   },
 
-  activeEmergencyQrNonces: [String],
-  lastKnownLocation: {
-    lat: Number,
-    lng: Number,
-    city: String,
-    country: String,
-    capturedAt: Date,
+  onboarding: {
+    method: { type: String, enum: ['SELF_SIGNUP', 'QUICK_REGISTER_BY_STAFF'], default: 'SELF_SIGNUP' },
+    registeredBy: { type: Schema.Types.ObjectId, ref: 'User' },
+    profileCompletedAt: Date,
   },
 
   stats: {

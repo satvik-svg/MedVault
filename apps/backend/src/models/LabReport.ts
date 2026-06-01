@@ -3,12 +3,13 @@ import mongoose, { Schema, type Document, type ObjectId } from 'mongoose'
 export interface ILabReport extends Document {
   patientId: ObjectId
   uploadedByUserId?: ObjectId
-  clinicId?: ObjectId
-  labClinicId?: ObjectId
+  labId?: ObjectId
+  labOrderId?: ObjectId
+  uploadedByOperatorUserId?: ObjectId
   orderedByDoctorId?: ObjectId
   prescriptionId?: ObjectId
   reportNumber?: string
-  source: 'MEDVAULT_NATIVE' | 'EXTERNAL_OCR' | 'EXTERNAL_MANUAL'
+  source: 'MEDVAULT_NATIVE_LAB_PARTNER' | 'MEDVAULT_NATIVE_DOCTOR_ENTRY' | 'EXTERNAL_OCR' | 'EXTERNAL_MANUAL'
   fileUrl?: string
   fileType?: string
   collectionDate?: Date
@@ -57,12 +58,13 @@ export interface ILabReport extends Document {
 const LabReportSchema = new Schema<ILabReport>({
   patientId: { type: Schema.Types.ObjectId, ref: 'Patient', required: true, index: true },
   uploadedByUserId: { type: Schema.Types.ObjectId, ref: 'User' },
-  clinicId: { type: Schema.Types.ObjectId, ref: 'Clinic' },
-  labClinicId: { type: Schema.Types.ObjectId, ref: 'Clinic', index: true },
+  labId: { type: Schema.Types.ObjectId, ref: 'Lab', index: true },
+  labOrderId: { type: Schema.Types.ObjectId, ref: 'LabOrder', index: true },
+  uploadedByOperatorUserId: { type: Schema.Types.ObjectId, ref: 'User' },
   orderedByDoctorId: { type: Schema.Types.ObjectId, ref: 'Doctor' },
   prescriptionId: { type: Schema.Types.ObjectId, ref: 'Prescription' },
   reportNumber: { type: String, unique: true, sparse: true },
-  source: { type: String, enum: ['MEDVAULT_NATIVE', 'EXTERNAL_OCR', 'EXTERNAL_MANUAL'], default: 'MEDVAULT_NATIVE' },
+  source: { type: String, enum: ['MEDVAULT_NATIVE_LAB_PARTNER', 'MEDVAULT_NATIVE_DOCTOR_ENTRY', 'EXTERNAL_OCR', 'EXTERNAL_MANUAL'], default: 'MEDVAULT_NATIVE_LAB_PARTNER' },
   fileUrl: String,
   fileType: String,
   collectionDate: Date,
@@ -107,6 +109,6 @@ const LabReportSchema = new Schema<ILabReport>({
 }, { timestamps: true })
 
 LabReportSchema.index({ patientId: 1, reportDate: -1 })
-LabReportSchema.index({ labClinicId: 1, reportDate: -1 })
+LabReportSchema.index({ labId: 1, reportDate: -1 })
 
 export const LabReport = mongoose.model<ILabReport>('LabReport', LabReportSchema)

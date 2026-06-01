@@ -16,7 +16,7 @@ export function canonicalizePrescriptionForHashing(prescription: IPrescription):
     prescriptionNumber: prescription.prescriptionNumber || '',
     patientId: objectIdToString(prescription.patientId),
     doctorId: objectIdToString(prescription.doctorId),
-    clinicId: objectIdToString(prescription.clinicId),
+    visitId: objectIdToString(prescription.visitId),
     createdAt,
     diagnosis: (prescription.diagnosis || [])
       .map((diagnosis) => ({

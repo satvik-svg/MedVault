@@ -4,9 +4,8 @@ import { authenticate } from '../middleware/index.ts'
 import { buildPatientSummary, buildPatientTimeline } from '../services/patient-summary.service.ts'
 import { listPatientPrescriptions } from '../services/prescription.service.ts'
 import { listPatientLabReports } from '../services/lab.service.ts'
+import { listPatientLabOrders, markPatientUsingAlternateLab } from '../services/lab-order.service.ts'
 import { resolveConsentRequest } from '../services/consent.service.ts'
-import { generateEmergencyQR } from '../services/emergency-qr.service.ts'
-import { EmergencyQR } from '../models/EmergencyQR.ts'
 
 const router: RouterType = Router()
 
@@ -76,17 +75,30 @@ router.post('/consent-requests/:id/resolve', async (req, res) => {
   }
 })
 
-router.get('/qr/emergency', async (req, res) => {
+router.get('/qr/emergency', async (_req, res) => {
+  res.status(410).json({ error: 'Emergency QR was removed in MedVault v2.' })
+})
+
+router.get('/me/lab-orders', async (req, res) => {
   try {
-    const activeQr = await EmergencyQR.findOne({ patientId: req.user?.patientId, status: 'ACTIVE' }).sort({ createdAt: -1 })
-    if (activeQr) {
-      res.json(activeQr)
-      return
-    }
-    const generatedQr = await generateEmergencyQR(req.user?.patientId || '')
-    res.json(generatedQr)
+    const orders = await listPatientLabOrders(req.user?.patientId || '')
+    res.json(orders)
   } catch (error) {
-    res.status(400).json({ error: error instanceof Error ? error.message : 'Failed to fetch emergency QR' })
+    res.status(400).json({ error: error instanceof Error ? error.message : 'Failed to fetch lab orders' })
+  }
+})
+
+router.post('/lab-orders/:id/use-alternate-lab', async (req, res) => {
+  try {
+    const order = await markPatientUsingAlternateLab(
+      req.params.id,
+      req.user?.patientId || '',
+      req.user?.userId || '',
+      String(req.body.alternateLabName || 'Alternate lab')
+    )
+    res.json(order)
+  } catch (error) {
+    res.status(400).json({ error: error instanceof Error ? error.message : 'Failed to update lab order' })
   }
 })
 

@@ -3,38 +3,60 @@ import mongoose, { Schema, type Document, type ObjectId } from 'mongoose'
 export interface IDoctor extends Document {
   userId: ObjectId
   fullName: string
+  photoUrl?: string
   nmcRegNumber: string
   stateMedicalCouncil: string
   hprId?: string
   specializations: Array<{
-    code: string
+    code?: string
     displayName: string
     isPrimary?: boolean
   }>
   qualifications: Array<{
     degree: string
-    institution: string
-    year: number
+    institution?: string
+    year?: number
     certificateUrl?: string
   }>
+  languages: string[]
+  yearsExperience?: number
+  practice: {
+    displayName: string
+    address: {
+      line1?: string
+      line2?: string
+      city: string
+      state?: string
+      pincode?: string
+      geoLocation?: { type: 'Point'; coordinates: number[] }
+    }
+    phone?: string
+    operatingHours: Array<{
+      dayOfWeek: number
+      morningSlot?: { start?: string; end?: string }
+      eveningSlot?: { start?: string; end?: string }
+    }>
+    consultationFee?: number
+    logoUrl?: string
+    signatureUrl?: string
+  }
+  hospitalAffiliations: string[]
   verification: {
     nmcVerified: boolean
     nmcVerifiedAt?: Date
-    nmcVerificationMethod: 'AUTO_API' | 'MANUAL_DOCUMENT_REVIEW'
-    documentsReviewed: boolean
+    nmcCertificateUrl?: string
+    manualReviewStatus: 'PENDING' | 'APPROVED' | 'REJECTED' | 'NEEDS_MORE_DOCS'
     reviewedBy?: ObjectId
     reviewedAt?: Date
     reviewNotes?: string
   }
-  affiliations: Array<{
-    clinicId: ObjectId
-    role: 'CONSULTANT' | 'RESIDENT' | 'VISITING' | 'OWNER'
-    confirmedByClinic: boolean
-    confirmedByDoctor: boolean
-    activeSince?: Date
-    isActive: boolean
-  }>
-  trustLevel: 'TIER_1_FULL' | 'TIER_2_INDEPENDENT' | 'TIER_3_PENDING' | 'TIER_4_REJECTED'
+  onboarding: {
+    method: 'SELF_SIGNUP' | 'ASSISTED_BY_STAFF'
+    onboardedBy?: ObjectId
+    initialLoginCompleted: boolean
+  }
+  preferredLabIds: ObjectId[]
+  trustLevel: 'VERIFIED' | 'PENDING' | 'REJECTED'
   stats: {
     prescriptionCount: number
     patientCount: number
@@ -50,46 +72,79 @@ const DoctorSchema = new Schema<IDoctor>({
   userId: { type: Schema.Types.ObjectId, ref: 'User', required: true, unique: true },
 
   fullName: { type: String, required: true },
+  photoUrl: String,
   nmcRegNumber: { type: String, required: true, unique: true, index: true },
   stateMedicalCouncil: { type: String, required: true },
   hprId: { type: String, sparse: true, index: true },
 
   specializations: [{
     code: String,
-    displayName: String,
+    displayName: { type: String, required: true },
     isPrimary: Boolean,
   }],
 
   qualifications: [{
-    degree: String,
+    degree: { type: String, required: true },
     institution: String,
     year: Number,
     certificateUrl: String,
   }],
 
+  languages: [String],
+  yearsExperience: Number,
+
+  practice: {
+    displayName: { type: String, required: true },
+    address: {
+      line1: String,
+      line2: String,
+      city: { type: String, required: true, index: true },
+      state: String,
+      pincode: String,
+      geoLocation: {
+        type: { type: String, enum: ['Point'], default: 'Point' },
+        coordinates: [Number],
+      },
+    },
+    phone: String,
+    operatingHours: [{
+      dayOfWeek: { type: Number, min: 0, max: 6 },
+      morningSlot: { start: String, end: String },
+      eveningSlot: { start: String, end: String },
+    }],
+    consultationFee: Number,
+    logoUrl: String,
+    signatureUrl: String,
+  },
+
+  hospitalAffiliations: [String],
+
   verification: {
     nmcVerified: { type: Boolean, default: false },
     nmcVerifiedAt: Date,
-    nmcVerificationMethod: { type: String, enum: ['AUTO_API', 'MANUAL_DOCUMENT_REVIEW'] },
-    documentsReviewed: { type: Boolean, default: false },
+    nmcCertificateUrl: String,
+    manualReviewStatus: {
+      type: String,
+      enum: ['PENDING', 'APPROVED', 'REJECTED', 'NEEDS_MORE_DOCS'],
+      default: 'PENDING',
+    },
     reviewedBy: { type: Schema.Types.ObjectId, ref: 'User' },
     reviewedAt: Date,
     reviewNotes: String,
   },
 
-  affiliations: [{
-    clinicId: { type: Schema.Types.ObjectId, ref: 'Clinic', required: true },
-    role: { type: String, enum: ['CONSULTANT', 'RESIDENT', 'VISITING', 'OWNER'] },
-    confirmedByClinic: { type: Boolean, default: false },
-    confirmedByDoctor: { type: Boolean, default: false },
-    activeSince: Date,
-    isActive: { type: Boolean, default: true },
-  }],
+  onboarding: {
+    method: { type: String, enum: ['SELF_SIGNUP', 'ASSISTED_BY_STAFF'], default: 'SELF_SIGNUP' },
+    onboardedBy: { type: Schema.Types.ObjectId, ref: 'User' },
+    initialLoginCompleted: { type: Boolean, default: false },
+  },
+
+  preferredLabIds: [{ type: Schema.Types.ObjectId, ref: 'Lab' }],
 
   trustLevel: {
     type: String,
-    enum: ['TIER_1_FULL', 'TIER_2_INDEPENDENT', 'TIER_3_PENDING', 'TIER_4_REJECTED'],
-    default: 'TIER_3_PENDING',
+    enum: ['VERIFIED', 'PENDING', 'REJECTED'],
+    default: 'PENDING',
     index: true,
   },
 
@@ -104,7 +159,8 @@ const DoctorSchema = new Schema<IDoctor>({
 }, { timestamps: true })
 
 DoctorSchema.index({ nmcRegNumber: 1 })
-DoctorSchema.index({ 'affiliations.clinicId': 1, 'affiliations.isActive': 1 })
+DoctorSchema.index({ 'practice.address.city': 1 })
+DoctorSchema.index({ 'practice.address.geoLocation': '2dsphere' })
 DoctorSchema.index({ trustLevel: 1 })
 
 export const Doctor = mongoose.model<IDoctor>('Doctor', DoctorSchema)

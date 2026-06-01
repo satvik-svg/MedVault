@@ -13,3 +13,7 @@ export function generateTokenId(): string {
 export function generateNonce(): string {
   return uuidv4()
 }
+
+export function generateTempPassword(): string {
+  return `Mv-${uuidv4().slice(0, 8)}!`
+}

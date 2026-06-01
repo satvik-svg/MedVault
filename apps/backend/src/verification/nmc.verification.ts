@@ -1,17 +1,19 @@
 import mongoose from 'mongoose'
 import { Doctor } from '../models/Doctor.ts'
+import { sendWhatsApp } from '../services/notification.service.ts'
+import { User } from '../models/User.ts'
 
 interface VerificationQueueItem {
-  type: 'DOCTOR_NMC' | 'CLINIC_MANUAL'
+  type: 'DOCTOR_NMC' | 'LAB_MANUAL'
   targetId: string
-  status: 'PENDING' | 'APPROVED' | 'REJECTED'
+  status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'NEEDS_MORE_DOCS'
   submittedAt: Date
 }
 
-// Simple in-memory queue for Phase 1; migrate to DB-backed queue in later phases
 const verificationQueue: VerificationQueueItem[] = []
 
 export async function queueDoctorForManualReview(doctorId: string): Promise<void> {
+  if (verificationQueue.some((item) => item.type === 'DOCTOR_NMC' && item.targetId === doctorId && item.status === 'PENDING')) return
   verificationQueue.push({
     type: 'DOCTOR_NMC',
     targetId: doctorId,
@@ -20,37 +22,42 @@ export async function queueDoctorForManualReview(doctorId: string): Promise<void
   })
 }
 
-export async function approveDoctorNmc(doctorId: string, reviewedBy: string): Promise<void> {
+export async function queueLabForManualReview(labId: string): Promise<void> {
+  if (verificationQueue.some((item) => item.type === 'LAB_MANUAL' && item.targetId === labId && item.status === 'PENDING')) return
+  verificationQueue.push({
+    type: 'LAB_MANUAL',
+    targetId: labId,
+    status: 'PENDING',
+    submittedAt: new Date(),
+  })
+}
+
+export async function approveDoctorNmc(doctorId: string, reviewedBy: string, notes = 'Approved by platform admin'): Promise<void> {
   const doctor = await Doctor.findById(doctorId)
   if (!doctor) throw new Error('Doctor not found')
 
   doctor.verification.nmcVerified = true
   doctor.verification.nmcVerifiedAt = new Date()
-  doctor.verification.nmcVerificationMethod = 'MANUAL_DOCUMENT_REVIEW'
-  doctor.verification.documentsReviewed = true
+  doctor.verification.manualReviewStatus = 'APPROVED'
   doctor.verification.reviewedBy = new mongoose.Types.ObjectId(reviewedBy) as any
   doctor.verification.reviewedAt = new Date()
-  doctor.verification.reviewNotes = 'Approved by platform admin'
-
-  // Upgrade trust level when NMC verified
-  if (doctor.verification.nmcVerified) {
-    const hasActiveAffiliation = doctor.affiliations.some(a => a.isActive && a.confirmedByClinic)
-    doctor.trustLevel = hasActiveAffiliation ? 'TIER_1_FULL' : 'TIER_2_INDEPENDENT'
-  }
-
+  doctor.verification.reviewNotes = notes
+  doctor.trustLevel = 'VERIFIED'
   await doctor.save()
 
-  // Update queue
   const item = verificationQueue.find(q => q.targetId === doctorId && q.type === 'DOCTOR_NMC')
   if (item) item.status = 'APPROVED'
+
+  const user = await User.findById(doctor.userId)
+  await sendWhatsApp(user?.phoneNumber, `Welcome to MedVault, Dr. ${doctor.fullName}. Your NMC review is approved. You can now log in and start using MedVault.`)
 }
 
 export async function rejectDoctorNmc(doctorId: string, reviewedBy: string, reason: string): Promise<void> {
   const doctor = await Doctor.findById(doctorId)
   if (!doctor) throw new Error('Doctor not found')
 
-  doctor.trustLevel = 'TIER_4_REJECTED'
-  doctor.verification.documentsReviewed = true
+  doctor.trustLevel = 'REJECTED'
+  doctor.verification.manualReviewStatus = 'REJECTED'
   doctor.verification.reviewedBy = new mongoose.Types.ObjectId(reviewedBy) as any
   doctor.verification.reviewedAt = new Date()
   doctor.verification.reviewNotes = reason
@@ -58,6 +65,20 @@ export async function rejectDoctorNmc(doctorId: string, reviewedBy: string, reas
 
   const item = verificationQueue.find(q => q.targetId === doctorId && q.type === 'DOCTOR_NMC')
   if (item) item.status = 'REJECTED'
+}
+
+export async function requestDoctorMoreDocs(doctorId: string, reviewedBy: string, notes: string): Promise<void> {
+  const doctor = await Doctor.findById(doctorId)
+  if (!doctor) throw new Error('Doctor not found')
+
+  doctor.verification.manualReviewStatus = 'NEEDS_MORE_DOCS'
+  doctor.verification.reviewedBy = new mongoose.Types.ObjectId(reviewedBy) as any
+  doctor.verification.reviewedAt = new Date()
+  doctor.verification.reviewNotes = notes
+  await doctor.save()
+
+  const item = verificationQueue.find(q => q.targetId === doctorId && q.type === 'DOCTOR_NMC')
+  if (item) item.status = 'NEEDS_MORE_DOCS'
 }
 
 export function getPendingVerificationQueue(): VerificationQueueItem[] {

@@ -1,7 +1,7 @@
-import { Appointment } from '../models/Appointment.ts'
 import { LabReport } from '../models/LabReport.ts'
 import { Patient } from '../models/Patient.ts'
 import { Prescription } from '../models/Prescription.ts'
+import { Visit } from '../models/Visit.ts'
 import { redis } from '../config/redis.ts'
 import { computeAge, durationToDays } from '../utils/time.ts'
 import { aiClient } from './ai-client.service.ts'
@@ -16,10 +16,10 @@ function lastMonths(count: number): string[] {
   return labels
 }
 
-function aggregateVisitsByMonth(appointments: Array<{ slotStart?: Date; scheduledAt?: Date }>, months = 12): Array<{ month: string; count: number }> {
+function aggregateVisitsByMonth(visits: Array<{ startedAt?: Date }>, months = 12): Array<{ month: string; count: number }> {
   const buckets = new Map(lastMonths(months).map((month) => [month, 0]))
-  for (const appointment of appointments) {
-    const date = appointment.slotStart || appointment.scheduledAt
+  for (const visit of visits) {
+    const date = visit.startedAt
     if (!date) continue
     const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
     if (buckets.has(key)) buckets.set(key, (buckets.get(key) || 0) + 1)
@@ -100,16 +100,16 @@ function extractLabTrends(labs: Array<{ reportDate?: Date; results?: Array<{ tes
 export async function buildPatientTimeline(patientId: string, filters: { from?: Date; to?: Date; types?: string[] } = {}): Promise<unknown[]> {
   const from = filters.from || new Date(0)
   const to = filters.to || new Date()
-  const [prescriptions, labs, appointments] = await Promise.all([
+  const [prescriptions, labs, visits] = await Promise.all([
     Prescription.find({ patientId, createdAt: { $gte: from, $lte: to } }).lean(),
     LabReport.find({ patientId, reportDate: { $gte: from, $lte: to } }).lean(),
-    Appointment.find({ patientId, slotStart: { $gte: from, $lte: to } }).lean(),
+    Visit.find({ patientId, startedAt: { $gte: from, $lte: to } }).lean(),
   ])
 
   return [
     ...prescriptions.map((prescription) => ({ type: 'PRESCRIPTION', date: prescription.createdAt, data: prescription })),
     ...labs.map((lab) => ({ type: 'LAB_REPORT', date: lab.reportDate, data: lab })),
-    ...appointments.map((appointment) => ({ type: 'APPOINTMENT', date: appointment.slotStart, data: appointment })),
+    ...visits.map((visit) => ({ type: 'VISIT', date: visit.startedAt, data: visit })),
   ]
     .filter((event) => !filters.types?.length || filters.types.includes(event.type))
     .sort((a, b) => new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime())
@@ -123,15 +123,15 @@ export async function buildPatientSummary(patientId: string, viewerDoctorId?: st
   const patient = await Patient.findById(patientId).lean()
   if (!patient) throw new Error('Patient not found')
 
-  const [prescriptions, labs, appointments] = await Promise.all([
+  const [prescriptions, labs, visits] = await Promise.all([
     Prescription.find({ patientId }).sort({ createdAt: -1 }).limit(50).lean(),
     LabReport.find({ patientId }).sort({ reportDate: -1 }).limit(50).lean(),
-    Appointment.find({ patientId, status: { $in: ['COMPLETED', 'IN_CONSULTATION', 'CHECKED_IN'] } }).sort({ slotStart: -1 }).limit(50).lean(),
+    Visit.find({ patientId, status: { $in: ['COMPLETED', 'IN_CONSULTATION', 'CHECKED_IN'] } }).sort({ startedAt: -1 }).limit(50).lean(),
   ])
 
   const adherence = computeAdherence(prescriptions)
   const labTrends = extractLabTrends(labs)
-  const latestAppointment = appointments[0]
+  const latestVisit = visits[0]
   const summary: Record<string, unknown> = {
     patient: {
       id: patient._id,
@@ -145,16 +145,16 @@ export async function buildPatientSummary(patientId: string, viewerDoctorId?: st
       activeMedications: patient.activeMedications || [],
     },
     stats: {
-      totalVisits: appointments.length,
-      visitsLast12Months: aggregateVisitsByMonth(appointments, 12),
+      totalVisits: visits.length,
+      visitsLast12Months: aggregateVisitsByMonth(visits, 12),
       topDiagnoses: aggregateDiagnoses(prescriptions),
       medicationTimeline: buildMedicationTimeline(prescriptions),
       adherence,
-      lastVisitAt: latestAppointment?.slotStart,
+      lastVisitAt: latestVisit?.startedAt,
     },
     labTrends,
     recentPrescriptions: prescriptions.slice(0, 5),
-    preVisitDiagnoses: latestAppointment?.preVisitSymptoms?.aiTop3Diagnoses || [],
+    preVisitDiagnoses: latestVisit?.preVisitSymptoms?.aiTop3Diagnoses || [],
     aiSummaryParagraph: null,
     symptomRecurrence: null,
   }
@@ -167,12 +167,12 @@ export async function buildPatientSummary(patientId: string, viewerDoctorId?: st
     activeMedications: patient.activeMedications || [],
     labTrends,
     stats: summary.stats,
-    currentSymptoms: latestAppointment?.preVisitSymptoms?.rawText,
+    currentSymptoms: latestVisit?.preVisitSymptoms?.rawText,
   })
   summary.aiSummaryParagraph = aiSummary.summary
 
-  if (latestAppointment?.preVisitSymptoms?.extractedEntities?.length) {
-    const recurrence = await aiClient.checkRecurrence(patientId, latestAppointment.preVisitSymptoms.extractedEntities)
+  if (latestVisit?.preVisitSymptoms?.extractedEntities?.length) {
+    const recurrence = await aiClient.checkRecurrence(patientId, latestVisit.preVisitSymptoms.extractedEntities)
     summary.symptomRecurrence = recurrence.recurring_presentations
   }
 

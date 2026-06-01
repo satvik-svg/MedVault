@@ -1,19 +1,21 @@
 import { AccessLog } from '../models/AccessLog.ts'
-import { Appointment } from '../models/Appointment.ts'
 import { Doctor } from '../models/Doctor.ts'
 import { Patient } from '../models/Patient.ts'
 import { Prescription, type IPrescription } from '../models/Prescription.ts'
 import { RefDrug } from '../models/RefDrug.ts'
+import { Visit } from '../models/Visit.ts'
 import { enqueuePrescriptionAnchor } from '../jobs/queues.ts'
+import { config } from '../config/env.ts'
 import type { AccessTokenPayload } from '../utils/jwt.ts'
 import { addDays, durationToDays } from '../utils/time.ts'
-import { signPayload, toQrDataUrl } from '../utils/qr.ts'
+import { toQrDataUrl } from '../utils/qr.ts'
 import { canonicalizePrescriptionForHashing } from '../utils/canonicalize.ts'
 import { sha256HexPrefixed } from '../utils/hash.ts'
 import { buildPrescriptionPdfDataUrl } from '../utils/pdf.ts'
 import { assertActiveConsent } from './consent.service.ts'
 import { runMedicationSafetyChecks } from './safety-checks.service.ts'
 import { sendWhatsApp } from './notification.service.ts'
+import { createLabOrder, type CreateLabOrderInput } from './lab-order.service.ts'
 
 export class SafetyCheckError extends Error {
   constructor(public code: string, message: string, public details?: unknown) {
@@ -28,12 +30,12 @@ type PrescriptionMedicationInput = IPrescription['medications'][number] & {
 export interface CreatePrescriptionInput {
   patientId: string
   doctorId?: string
-  clinicId?: string
-  appointmentId?: string
+  visitId?: string
   diagnosis?: IPrescription['diagnosis']
   medications?: PrescriptionMedicationInput[]
   drugs?: NonNullable<IPrescription['drugs']>
   labOrders?: IPrescription['labOrders']
+  labOrder?: Omit<CreateLabOrderInput, 'patientId' | 'visitId' | 'prescriptionId'>
   followUp?: IPrescription['followUp']
   notes?: string
   allergyOverrideAcknowledged?: boolean
@@ -73,6 +75,11 @@ function computeMedicationEndDate(start: Date, medication: PrescriptionMedicatio
   return addDays(start, days)
 }
 
+function generateVerificationQR(prescription: IPrescription): { url: string; imageUrl: string } {
+  const url = `${config.apiBaseUrl}/verify/prescription/${prescription._id.toString()}`
+  return { url, imageUrl: toQrDataUrl(url, prescription.prescriptionNumber || 'Verify prescription') }
+}
+
 export async function updatePatientActiveMedications(patientId: string, prescription: IPrescription): Promise<void> {
   const startedAt = prescription.createdAt || new Date()
   for (const medication of prescription.medications || []) {
@@ -104,13 +111,10 @@ export async function cleanupExpiredMedications(): Promise<void> {
 export async function createPrescription(
   input: CreatePrescriptionInput,
   doctorUser: AccessTokenPayload
-): Promise<IPrescription> {
+): Promise<{ prescription: IPrescription; labOrders: unknown[] }> {
   if (!doctorUser.doctorId) throw new Error('Doctor profile is required')
   const doctor = await Doctor.findById(input.doctorId || doctorUser.doctorId)
   if (!doctor) throw new Error('Doctor not found')
-
-  const clinicId = input.clinicId || doctorUser.clinicId || doctor.affiliations.find((affiliation) => affiliation.isActive)?.clinicId?.toString()
-  if (!clinicId) throw new Error('Clinic context is required')
 
   await assertActiveConsent(input.patientId, doctorUser.userId, ['FULL', 'PRESCRIPTIONS'])
 
@@ -137,8 +141,7 @@ export async function createPrescription(
   const prescription = await Prescription.create({
     patientId: input.patientId,
     doctorId: doctor._id,
-    clinicId,
-    appointmentId: input.appointmentId,
+    visitId: input.visitId,
     prescriptionNumber: generatePrescriptionNumber(),
     source: 'MEDVAULT_NATIVE',
     status: 'ISSUED',
@@ -155,9 +158,7 @@ export async function createPrescription(
   })
 
   prescription.pdfUrl = buildPrescriptionPdfDataUrl(prescription)
-  const qr = signPayload({ type: 'PRESCRIPTION', pid: prescription._id.toString(), pn: prescription.prescriptionNumber }, 30 * 86_400)
-  prescription.qrCodeData = `medvault://rx/${qr.signedPayload}`
-  prescription.qrCodeImageUrl = toQrDataUrl(prescription.qrCodeData, prescription.prescriptionNumber)
+  prescription.verificationQR = generateVerificationQR(prescription)
   prescription.blockchain = {
     ...prescription.blockchain,
     contentHash: sha256HexPrefixed(canonicalizePrescriptionForHashing(prescription)),
@@ -168,15 +169,27 @@ export async function createPrescription(
   await updatePatientActiveMedications(input.patientId, prescription)
   await enqueuePrescriptionAnchor(prescription._id.toString())
 
-  if (input.appointmentId) {
-    await Appointment.updateOne(
-      { _id: input.appointmentId },
+  const labOrders = []
+  if (input.labOrder && input.visitId) {
+    const labOrder = await createLabOrder({
+      ...input.labOrder,
+      patientId: input.patientId,
+      visitId: input.visitId,
+      prescriptionId: prescription._id.toString(),
+    }, doctorUser)
+    labOrders.push(labOrder)
+  }
+
+  if (input.visitId) {
+    await Visit.updateOne(
+      { _id: input.visitId, doctorId: doctor._id, patientId: input.patientId },
       {
         $set: {
           prescriptionId: prescription._id,
           status: 'COMPLETED',
-          consultationEndedAt: new Date(),
+          endedAt: new Date(),
         },
+        ...(labOrders.length ? { $addToSet: { labOrderIds: { $each: labOrders.map((order) => order._id) } } } : {}),
       }
     )
   }
@@ -191,7 +204,7 @@ export async function createPrescription(
   })
 
   await sendWhatsApp(patient.contact.primaryPhone, `A new MedVault prescription ${prescription.prescriptionNumber} is available in your account.`)
-  return prescription
+  return { prescription, labOrders }
 }
 
 export async function listPatientPrescriptions(patientId: string): Promise<unknown[]> {

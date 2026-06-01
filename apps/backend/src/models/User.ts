@@ -4,10 +4,11 @@ export interface IUser extends Document {
   phoneNumber: string
   email?: string
   passwordHash?: string
-  role: 'PATIENT' | 'DOCTOR' | 'CLINIC_ADMIN' | 'LAB_OPERATOR' | 'PHARMACY_OPERATOR' | 'PLATFORM_ADMIN'
+  role: 'PATIENT' | 'DOCTOR' | 'LAB_OPERATOR' | 'PLATFORM_ADMIN'
   patientId?: ObjectId
   doctorId?: ObjectId
-  clinicId?: ObjectId
+  labId?: ObjectId
+  mustChangePassword: boolean
   isPhoneVerified: boolean
   isEmailVerified: boolean
   isActive: boolean
@@ -28,14 +29,15 @@ const UserSchema = new Schema<IUser>({
 
   role: {
     type: String,
-    enum: ['PATIENT', 'DOCTOR', 'CLINIC_ADMIN', 'LAB_OPERATOR', 'PHARMACY_OPERATOR', 'PLATFORM_ADMIN'],
+    enum: ['PATIENT', 'DOCTOR', 'LAB_OPERATOR', 'PLATFORM_ADMIN'],
     required: true,
     index: true,
   },
 
   patientId: { type: Schema.Types.ObjectId, ref: 'Patient' },
   doctorId: { type: Schema.Types.ObjectId, ref: 'Doctor' },
-  clinicId: { type: Schema.Types.ObjectId, ref: 'Clinic' },
+  labId: { type: Schema.Types.ObjectId, ref: 'Lab' },
+  mustChangePassword: { type: Boolean, default: false },
 
   isPhoneVerified: { type: Boolean, default: false },
   isEmailVerified: { type: Boolean, default: false },

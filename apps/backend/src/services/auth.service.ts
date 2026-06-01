@@ -3,7 +3,6 @@ import mongoose from 'mongoose'
 import { User } from '../models/User.ts'
 import { Patient } from '../models/Patient.ts'
 import { Doctor } from '../models/Doctor.ts'
-import { Clinic } from '../models/Clinic.ts'
 import { redis } from '../config/redis.ts'
 import {
   issueAccessToken,
@@ -60,7 +59,7 @@ export async function verifyOtpAndCreatePatient(
       role: existingUser.role,
       patientId: existingUser.patientId?.toString(),
       doctorId: existingUser.doctorId?.toString(),
-      clinicId: existingUser.clinicId?.toString(),
+      labId: existingUser.labId?.toString(),
     }
     const accessToken = issueAccessToken(accessPayload)
     const refreshToken = issueRefreshToken(existingUser._id.toString(), tokenId)
@@ -128,6 +127,12 @@ export async function doctorSignup(
     fullName: string
     nmcRegNumber: string
     stateMedicalCouncil: string
+    practice?: {
+      displayName?: string
+      address?: { city?: string; line1?: string; line2?: string; state?: string; pincode?: string }
+      phone?: string
+      consultationFee?: number
+    }
     specializations?: Array<{ code: string; displayName: string; isPrimary?: boolean }>
     qualifications?: Array<{ degree: string; institution: string; year: number }>
   }
@@ -159,6 +164,20 @@ export async function doctorSignup(
       stateMedicalCouncil: data.stateMedicalCouncil,
       specializations: data.specializations || [],
       qualifications: data.qualifications || [],
+      practice: {
+        displayName: data.practice?.displayName || `${data.fullName}'s Practice`,
+        address: {
+          city: data.practice?.address?.city || 'UNKNOWN',
+          line1: data.practice?.address?.line1,
+          line2: data.practice?.address?.line2,
+          state: data.practice?.address?.state,
+          pincode: data.practice?.address?.pincode,
+        },
+        phone: data.practice?.phone || data.phoneNumber,
+        consultationFee: data.practice?.consultationFee,
+        operatingHours: [],
+      },
+      onboarding: { method: 'SELF_SIGNUP', initialLoginCompleted: false },
     }], { session })
 
     await User.updateOne({ _id: user[0]._id }, { doctorId: doctor[0]._id }, { session })
@@ -170,7 +189,7 @@ export async function doctorSignup(
       userId: user[0]._id.toString(),
       role: 'DOCTOR',
       doctorId: doctor[0]._id.toString(),
-      trustLevel: 'TIER_3_PENDING',
+      trustLevel: 'PENDING',
     })
     const refreshToken = issueRefreshToken(user[0]._id.toString(), tokenId)
     await redis.setex(`refresh:${user[0]._id}:${tokenId}`, 30 * 24 * 3600, '1')
@@ -184,68 +203,8 @@ export async function doctorSignup(
   }
 }
 
-export async function clinicSignup(
-  data: {
-    phoneNumber: string
-    email: string
-    password: string
-    legalName: string
-    displayName: string
-    type: string
-    hfrId?: string
-    gstin?: string
-  }
-): Promise<{ accessToken: string; refreshToken: string }> {
-  const existingUser = await User.findOne({
-    $or: [{ phoneNumber: data.phoneNumber }, { email: data.email }],
-  })
-  if (existingUser) throw new Error('Phone number or email already registered')
-
-  const passwordHash = await bcrypt.hash(data.password, 12)
-
-  const session = await mongoose.startSession()
-  try {
-    session.startTransaction()
-
-    const user = await User.create([{
-      phoneNumber: data.phoneNumber,
-      email: data.email,
-      passwordHash,
-      role: 'CLINIC_ADMIN',
-      isPhoneVerified: false,
-      isEmailVerified: false,
-    }], { session })
-
-    const clinic = await Clinic.create([{
-      legalName: data.legalName,
-      displayName: data.displayName,
-      type: data.type,
-      hfrId: data.hfrId,
-      gstin: data.gstin,
-      adminUserIds: [user[0]._id],
-    }], { session })
-
-    await User.updateOne({ _id: user[0]._id }, { clinicId: clinic[0]._id }, { session })
-
-    await session.commitTransaction()
-
-    const tokenId = generateTokenId()
-    const accessToken = issueAccessToken({
-      userId: user[0]._id.toString(),
-      role: 'CLINIC_ADMIN',
-      clinicId: clinic[0]._id.toString(),
-      trustLevel: 'TIER_3_UNVERIFIED',
-    })
-    const refreshToken = issueRefreshToken(user[0]._id.toString(), tokenId)
-    await redis.setex(`refresh:${user[0]._id}:${tokenId}`, 30 * 24 * 3600, '1')
-
-    return { accessToken, refreshToken }
-  } catch (e) {
-    await session.abortTransaction()
-    throw e
-  } finally {
-    session.endSession()
-  }
+export async function clinicSignup(_data?: unknown): Promise<never> {
+  throw new Error('Clinic admin signup has been removed. Use assisted doctor/lab onboarding.')
 }
 
 // ─── Login ──────────────────────────────────────────────────────────────────
@@ -279,7 +238,7 @@ export async function login(
     role: user.role,
     patientId: user.patientId?.toString(),
     doctorId: user.doctorId?.toString(),
-    clinicId: user.clinicId?.toString(),
+    labId: user.labId?.toString(),
   }
   const accessToken = issueAccessToken(accessPayload)
   const refreshToken = issueRefreshToken(user._id.toString(), tokenId)
@@ -288,11 +247,48 @@ export async function login(
   return {
     accessToken,
     refreshToken,
-    user: { id: user._id, role: user.role, email: user.email },
+    user: { id: user._id, role: user.role, email: user.email, mustChangePassword: user.mustChangePassword },
   }
 }
 
 // ─── Refresh ────────────────────────────────────────────────────────────────
+
+export async function completeFirstTimeLogin(
+  email: string,
+  tempPassword: string,
+  newPassword: string
+): Promise<{ accessToken: string; refreshToken: string; user: Record<string, unknown> }> {
+  const user = await User.findOne({ email, deletedAt: { $exists: false } })
+  if (!user || !user.passwordHash) throw new Error('Invalid credentials')
+  if (!user.mustChangePassword) throw new Error('First-time password change is not required')
+
+  const valid = await bcrypt.compare(tempPassword, user.passwordHash)
+  if (!valid) throw new Error('Invalid credentials')
+
+  user.passwordHash = await bcrypt.hash(newPassword, 12)
+  user.mustChangePassword = false
+  user.isPhoneVerified = true
+  user.lastLoginAt = new Date()
+  await user.save()
+
+  const tokenId = generateTokenId()
+  const accessPayload: AccessTokenPayload = {
+    userId: user._id.toString(),
+    role: user.role,
+    patientId: user.patientId?.toString(),
+    doctorId: user.doctorId?.toString(),
+    labId: user.labId?.toString(),
+  }
+  const accessToken = issueAccessToken(accessPayload)
+  const refreshToken = issueRefreshToken(user._id.toString(), tokenId)
+  await redis.setex(`refresh:${user._id}:${tokenId}`, 30 * 24 * 3600, '1')
+
+  return {
+    accessToken,
+    refreshToken,
+    user: { id: user._id, role: user.role, email: user.email, mustChangePassword: false },
+  }
+}
 
 export async function refreshTokens(
   oldRefreshToken: string
@@ -312,7 +308,7 @@ export async function refreshTokens(
     role: user.role,
     patientId: user.patientId?.toString(),
     doctorId: user.doctorId?.toString(),
-    clinicId: user.clinicId?.toString(),
+    labId: user.labId?.toString(),
   }
   const accessToken = issueAccessToken(accessPayload)
   const refreshToken = issueRefreshToken(user._id.toString(), newTokenId)

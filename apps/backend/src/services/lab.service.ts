@@ -1,5 +1,5 @@
 import { AccessLog } from '../models/AccessLog.ts'
-import { Clinic } from '../models/Clinic.ts'
+import { Lab } from '../models/Lab.ts'
 import { LabReport, type ILabReport } from '../models/LabReport.ts'
 import { Patient } from '../models/Patient.ts'
 import { enqueueLabReportAnchor } from '../jobs/queues.ts'
@@ -43,7 +43,7 @@ export function detectAbnormalities(results: LabResultInput[]): LabResultInput[]
 
 export async function uploadStructuredLabReport(input: {
   patientId: string
-  labClinicId: string
+  labId: string
   operatorUserId: string
   orderedByDoctorId?: string
   prescriptionId?: string
@@ -52,11 +52,8 @@ export async function uploadStructuredLabReport(input: {
   results: LabResultInput[]
   attachmentUrls?: string[]
 }): Promise<ILabReport> {
-  const clinic = await Clinic.findById(input.labClinicId)
-  if (!clinic) throw new Error('Lab clinic not found')
-  if (!['DIAGNOSTIC_LAB', 'HOSPITAL', 'MULTI_SPECIALTY'].includes(clinic.type)) {
-    throw new Error('Clinic is not authorized for lab uploads')
-  }
+  const lab = await Lab.findById(input.labId)
+  if (!lab || lab.trustLevel !== 'VERIFIED' || !lab.isActive) throw new Error('Lab is not authorized for uploads')
 
   const patient = await Patient.findById(input.patientId)
   if (!patient) throw new Error('Patient not found')
@@ -68,12 +65,12 @@ export async function uploadStructuredLabReport(input: {
   const report = await LabReport.create({
     patientId: input.patientId,
     uploadedByUserId: input.operatorUserId,
-    clinicId: input.labClinicId,
-    labClinicId: input.labClinicId,
+    labId: input.labId,
+    uploadedByOperatorUserId: input.operatorUserId,
     orderedByDoctorId: input.orderedByDoctorId,
     prescriptionId: input.prescriptionId,
     reportNumber: generateReportNumber(),
-    source: 'MEDVAULT_NATIVE',
+    source: 'MEDVAULT_NATIVE_LAB_PARTNER',
     collectionDate: input.collectionDate,
     reportDate: input.reportDate,
     results,

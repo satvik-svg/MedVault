@@ -2,12 +2,13 @@ import { Router, type Router as RouterType } from 'express'
 import {
   registerDoctor,
   uploadNmcCertificate,
-  affiliateWithClinic,
   getDoctorMe,
+  updateDoctorMe,
+  updatePreferredLabs,
 } from '../controllers/doctor.controller.ts'
 import { authenticate, requireRole } from '../middleware/index.ts'
-import { Appointment } from '../models/Appointment.ts'
 import { Patient } from '../models/Patient.ts'
+import { Visit } from '../models/Visit.ts'
 import { buildPatientSummary, buildPatientTimeline } from '../services/patient-summary.service.ts'
 import { checkMedicationForPrescription, createPrescription, SafetyCheckError } from '../services/prescription.service.ts'
 import { checkOrRequestConsent } from '../services/consent.service.ts'
@@ -18,8 +19,9 @@ router.use(authenticate)
 
 router.post('/register', registerDoctor)
 router.post('/upload-nmc-certificate', requireRole('DOCTOR'), uploadNmcCertificate)
-router.post('/affiliate/:clinicId', requireRole('DOCTOR'), affiliateWithClinic)
 router.get('/me', getDoctorMe)
+router.patch('/me', requireRole('DOCTOR'), updateDoctorMe)
+router.patch('/me/preferred-labs', requireRole('DOCTOR'), updatePreferredLabs)
 
 router.get('/today-queue', requireRole('DOCTOR'), async (req, res) => {
   try {
@@ -27,12 +29,12 @@ router.get('/today-queue', requireRole('DOCTOR'), async (req, res) => {
     start.setHours(0, 0, 0, 0)
     const end = new Date()
     end.setHours(23, 59, 59, 999)
-    const appointments = await Appointment.find({
+    const visits = await Visit.find({
       doctorId: req.user?.doctorId,
-      slotStart: { $gte: start, $lte: end },
-      status: { $nin: ['CANCELLED', 'NO_SHOW'] },
+      startedAt: { $gte: start, $lte: end },
+      status: { $nin: ['CANCELLED'] },
     }).populate('patientId', 'fullName medvaultId sex bloodGroup')
-    res.json(appointments)
+    res.json(visits)
   } catch (error) {
     res.status(400).json({ error: error instanceof Error ? error.message : 'Failed to fetch queue' })
   }
@@ -40,9 +42,9 @@ router.get('/today-queue', requireRole('DOCTOR'), async (req, res) => {
 
 router.get('/patients', requireRole('DOCTOR'), async (req, res) => {
   try {
-    const appointments = await Appointment.find({ doctorId: req.user?.doctorId })
+    const visits = await Visit.find({ doctorId: req.user?.doctorId })
       .distinct('patientId')
-    const patients = await Patient.find({ _id: { $in: appointments } })
+    const patients = await Patient.find({ _id: { $in: visits } })
       .select('fullName medvaultId sex bloodGroup activeMedications allergies chronicConditions')
       .lean()
     res.json(patients)

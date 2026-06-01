@@ -5,6 +5,7 @@ import {
   doctorRegister,
   clinicRegister,
   loginHandler,
+  firstTimeLoginHandler,
   refreshHandler,
   logoutHandler,
 } from '../controllers/auth.controller.ts'
@@ -17,6 +18,7 @@ router.post('/patient/verify-otp', verifyOtp)
 router.post('/doctor/signup', doctorRegister)
 router.post('/clinic/signup', clinicRegister)
 router.post('/login', loginRateLimiter, loginHandler)
+router.post('/login/first-time', loginRateLimiter, firstTimeLoginHandler)
 router.post('/refresh', refreshHandler)
 router.post('/logout', logoutHandler)
 

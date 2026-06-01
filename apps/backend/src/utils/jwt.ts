@@ -7,7 +7,7 @@ export interface AccessTokenPayload {
   role: string
   patientId?: string
   doctorId?: string
-  clinicId?: string
+  labId?: string
   trustLevel?: string
 }
 

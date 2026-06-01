@@ -2,12 +2,9 @@ import type { Request, Response, NextFunction } from 'express'
 import { Doctor } from '../models/Doctor.ts'
 
 const TRUST_LEVEL_ORDER: Record<string, number> = {
-  'TIER_1_FULL': 3,
-  'TIER_2_INDEPENDENT': 2,
-  'TIER_2_PARTIAL': 2,
-  'TIER_3_PENDING': 1,
-  'TIER_3_UNVERIFIED': 1,
-  'TIER_4_REJECTED': 0,
+  VERIFIED: 3,
+  PENDING: 1,
+  REJECTED: 0,
 }
 
 function isAtLeastTier(current: string, minLevel: string): boolean {
@@ -29,11 +26,11 @@ export function requireTrustLevel(minLevel: string) {
       }
     }
 
-    if ((req.user.role === 'CLINIC_ADMIN' || req.user.role === 'LAB_OPERATOR' || req.user.role === 'PHARMACY_OPERATOR') && req.user.clinicId) {
-      const { Clinic } = await import('../models/Clinic.ts')
-      const clinic = await Clinic.findById(req.user.clinicId).select('trustLevel')
-      if (!clinic || !isAtLeastTier(clinic.trustLevel, minLevel)) {
-        res.status(403).json({ error: 'Clinic verification pending or insufficient trust level' })
+    if (req.user.role === 'LAB_OPERATOR' && req.user.labId) {
+      const { Lab } = await import('../models/Lab.ts')
+      const lab = await Lab.findById(req.user.labId).select('trustLevel')
+      if (!lab || !isAtLeastTier(lab.trustLevel, minLevel)) {
+        res.status(403).json({ error: 'Lab verification pending or insufficient trust level' })
         return
       }
     }

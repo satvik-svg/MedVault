@@ -5,6 +5,7 @@ import {
   doctorSignup,
   clinicSignup,
   login,
+  completeFirstTimeLogin,
   refreshTokens,
   logout,
 } from '../services/auth.service.ts'
@@ -44,6 +45,16 @@ export async function clinicRegister(req: Request, res: Response): Promise<void>
     res.status(201).json(result)
   } catch (error) {
     res.status(400).json({ error: error instanceof Error ? error.message : 'Clinic registration failed' })
+  }
+}
+
+export async function firstTimeLoginHandler(req: Request, res: Response): Promise<void> {
+  try {
+    const { email, tempPassword, newPassword } = req.body
+    const result = await completeFirstTimeLogin(email, tempPassword, newPassword)
+    res.json(result)
+  } catch (error) {
+    res.status(401).json({ error: error instanceof Error ? error.message : 'First-time login failed' })
   }
 }
 

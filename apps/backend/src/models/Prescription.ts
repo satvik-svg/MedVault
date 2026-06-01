@@ -3,11 +3,10 @@ import mongoose, { Schema, type Document, type ObjectId } from 'mongoose'
 export interface IPrescription extends Document {
   patientId: ObjectId
   doctorId?: ObjectId
-  clinicId?: ObjectId
-  appointmentId?: ObjectId
+  visitId?: ObjectId
   prescriptionNumber?: string
   source: 'MEDVAULT_NATIVE' | 'EXTERNAL_OCR' | 'EXTERNAL_MANUAL_ENTRY'
-  status: 'DRAFT' | 'ISSUED' | 'DISPENSED' | 'EXPIRED' | 'REVOKED'
+  status: 'DRAFT' | 'ISSUED' | 'EXPIRED' | 'REVOKED'
   diagnosis: Array<{
     icd10Code: string
     displayName?: string
@@ -62,19 +61,9 @@ export interface IPrescription extends Document {
     notes?: string
   }
   pdfUrl?: string
-  qrCodeData?: string
-  qrCodeImageUrl?: string
-  fulfillment?: {
-    status?: 'PENDING' | 'PARTIALLY_DISPENSED' | 'FULLY_DISPENSED' | 'EXPIRED'
-    dispensedAt?: Date
-    dispensedBy?: ObjectId
-    pharmacyClinicId?: ObjectId
-    pharmacyNotes?: string
-    substitutions?: Array<{
-      originalRxnormCui?: string
-      substitutedWithCui?: string
-      reason?: string
-    }>
+  verificationQR?: {
+    url?: string
+    imageUrl?: string
   }
   blockchain?: {
     status?: 'NOT_QUEUED' | 'QUEUED' | 'PENDING' | 'ANCHORED' | 'FAILED'
@@ -115,8 +104,7 @@ export interface IPrescription extends Document {
 const PrescriptionSchema = new Schema<IPrescription>({
   patientId: { type: Schema.Types.ObjectId, ref: 'Patient', required: true, index: true },
   doctorId: { type: Schema.Types.ObjectId, ref: 'Doctor', index: true },
-  clinicId: { type: Schema.Types.ObjectId, ref: 'Clinic', index: true },
-  appointmentId: { type: Schema.Types.ObjectId, ref: 'Appointment' },
+  visitId: { type: Schema.Types.ObjectId, ref: 'Visit', index: true },
   prescriptionNumber: { type: String, unique: true, sparse: true, index: true },
   source: {
     type: String,
@@ -127,7 +115,7 @@ const PrescriptionSchema = new Schema<IPrescription>({
   },
   status: {
     type: String,
-    enum: ['DRAFT', 'ISSUED', 'DISPENSED', 'EXPIRED', 'REVOKED'],
+    enum: ['DRAFT', 'ISSUED', 'EXPIRED', 'REVOKED'],
     default: 'ISSUED',
     index: true,
   },
@@ -185,23 +173,9 @@ const PrescriptionSchema = new Schema<IPrescription>({
     notes: String,
   },
   pdfUrl: String,
-  qrCodeData: String,
-  qrCodeImageUrl: String,
-  fulfillment: {
-    status: {
-      type: String,
-      enum: ['PENDING', 'PARTIALLY_DISPENSED', 'FULLY_DISPENSED', 'EXPIRED'],
-      default: 'PENDING',
-    },
-    dispensedAt: Date,
-    dispensedBy: { type: Schema.Types.ObjectId, ref: 'User' },
-    pharmacyClinicId: { type: Schema.Types.ObjectId, ref: 'Clinic' },
-    pharmacyNotes: String,
-    substitutions: [{
-      originalRxnormCui: String,
-      substitutedWithCui: String,
-      reason: String,
-    }],
+  verificationQR: {
+    url: String,
+    imageUrl: String,
   },
   blockchain: {
     status: {
@@ -245,7 +219,7 @@ const PrescriptionSchema = new Schema<IPrescription>({
 PrescriptionSchema.index({ blockchainTxHash: 1 }, { sparse: true })
 PrescriptionSchema.index({ patientId: 1, createdAt: -1 })
 PrescriptionSchema.index({ doctorId: 1, createdAt: -1 })
-PrescriptionSchema.index({ 'fulfillment.status': 1 })
+PrescriptionSchema.index({ visitId: 1 })
 PrescriptionSchema.index({ source: 1 })
 
 export const Prescription = mongoose.model<IPrescription>('Prescription', PrescriptionSchema)
