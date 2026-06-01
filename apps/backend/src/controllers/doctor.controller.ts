@@ -67,11 +67,12 @@ export async function updatePreferredLabs(req: Request, res: Response): Promise<
       res.status(404).json({ error: 'Doctor profile not found' })
       return
     }
-    const doctor = await Doctor.findByIdAndUpdate(
+    await Doctor.findByIdAndUpdate(
       req.user.doctorId,
       { $set: { preferredLabIds: req.body.labIds || [] } },
       { new: true }
-    ).populate('preferredLabIds', 'displayName address trustLevel')
+    )
+    const doctor = await Doctor.findById(req.user.doctorId).populate('preferredLabIds', 'displayName address trustLevel')
     res.json(doctor)
   } catch (error) {
     res.status(400).json({ error: error instanceof Error ? error.message : 'Preferred lab update failed' })

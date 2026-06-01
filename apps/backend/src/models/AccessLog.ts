@@ -1,51 +1,17 @@
-import mongoose, { Schema, type Document, type ObjectId } from 'mongoose'
+import { AccessLog } from './prisma-registry.ts'
+import type { Id } from './User.ts'
 
-export interface IAccessLog extends Document {
-  actorUserId?: ObjectId
+export interface IAccessLog {
+  [key: string]: any
+  id: string
+  _id: string
+  actorUserId?: Id
   actorRole?: string
-  action: 'VIEW_PATIENT' | 'CREATE_PRESCRIPTION' | 'VIEW_PRESCRIPTION' | 'DISPENSE_PRESCRIPTION' | 'UPLOAD_LAB' | 'VIEW_LAB' | 'CONSENT_REQUEST' | 'CONSENT_GRANT' | 'CONSENT_REVOKE' | 'BLOCKCHAIN_VERIFY' | 'CREATE_VISIT' | 'ATTACH_PRE_VISIT' | 'CREATE_LAB_ORDER'
+  action: string
   targetType?: string
-  targetId?: ObjectId
-  patientId?: ObjectId
-  consentId?: ObjectId
-  ip?: string
-  userAgent?: string
-  geoCountry?: string
-  geoCity?: string
+  targetId?: Id
+  patientId?: Id
   metadata?: Record<string, unknown>
-  createdAt: Date
 }
 
-const AccessLogSchema = new Schema<IAccessLog>({
-  actorUserId: { type: Schema.Types.ObjectId, ref: 'User', index: true },
-  actorRole: String,
-
-  action: {
-    type: String,
-    enum: ['VIEW_PATIENT', 'CREATE_PRESCRIPTION', 'VIEW_PRESCRIPTION', 'DISPENSE_PRESCRIPTION',
-           'UPLOAD_LAB', 'VIEW_LAB', 'CONSENT_REQUEST', 'CONSENT_GRANT', 'CONSENT_REVOKE',
-           'BLOCKCHAIN_VERIFY', 'CREATE_VISIT', 'ATTACH_PRE_VISIT', 'CREATE_LAB_ORDER'],
-    required: true,
-    index: true,
-  },
-
-  targetType: String,
-  targetId: Schema.Types.ObjectId,
-  patientId: { type: Schema.Types.ObjectId, ref: 'Patient', index: true },
-
-  consentId: { type: Schema.Types.ObjectId, ref: 'Consent' },
-
-  ip: String,
-  userAgent: String,
-  geoCountry: String,
-  geoCity: String,
-
-  metadata: Schema.Types.Mixed,
-
-  createdAt: { type: Date, default: Date.now, index: true },
-}, { timestamps: false })
-
-AccessLogSchema.index({ patientId: 1, createdAt: -1 })
-AccessLogSchema.index({ actorUserId: 1, createdAt: -1 })
-
-export const AccessLog = mongoose.model<IAccessLog>('AccessLog', AccessLogSchema)
+export { AccessLog }

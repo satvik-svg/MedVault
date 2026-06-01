@@ -82,18 +82,18 @@
 .prescriptions-table__row:last-child { border-bottom: none; }
 .prescriptions-table__drug { font-weight: var(--weight-medium); color: var(--color-gray-800); }
 
-/* Appointments */
-.appointments-list { display: flex; flex-direction: column; gap: var(--space-3); }
-.appointment-item {
+/* Visits */
+.visit-list { display: flex; flex-direction: column; gap: var(--space-3); }
+.visit-item {
   display: flex; justify-content: space-between; align-items: center; padding: var(--space-4);
   background: var(--color-gray-50); border-radius: var(--radius-md); transition: all 0.2s;
 }
-.appointment-item:hover { background: var(--color-primary-50); }
-.appointment-item__date { display: flex; align-items: center; gap: var(--space-2); font-size: var(--text-sm); color: var(--color-gray-600); }
-.appointment-item__time { color: var(--color-gray-400); }
-.appointment-item__info { display: flex; align-items: center; gap: var(--space-3); }
-.appointment-item__info strong { font-size: var(--text-sm); }
-.appointment-item__type { font-size: var(--text-xs); color: var(--color-gray-400); }
+.visit-item:hover { background: var(--color-primary-50); }
+.visit-item__date { display: flex; align-items: center; gap: var(--space-2); font-size: var(--text-sm); color: var(--color-gray-600); }
+.visit-item__time { color: var(--color-gray-400); }
+.visit-item__info { display: flex; align-items: center; gap: var(--space-3); }
+.visit-item__info strong { font-size: var(--text-sm); }
+.visit-item__type { font-size: var(--text-xs); color: var(--color-gray-400); }
 
 @media (max-width: 1024px) {
   .dashboard__stats { grid-template-columns: repeat(2, 1fr); }

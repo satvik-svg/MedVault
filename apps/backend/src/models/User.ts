@@ -1,57 +1,18 @@
-import mongoose, { Schema, type Document, type ObjectId } from 'mongoose'
+import { User } from './prisma-registry.ts'
 
-export interface IUser extends Document {
+export type Id = string
+
+export interface IUser {
+  [key: string]: any
+  id: string
+  _id: string
   phoneNumber: string
   email?: string
   passwordHash?: string
   role: 'PATIENT' | 'DOCTOR' | 'LAB_OPERATOR' | 'PLATFORM_ADMIN'
-  patientId?: ObjectId
-  doctorId?: ObjectId
-  labId?: ObjectId
-  mustChangePassword: boolean
-  isPhoneVerified: boolean
-  isEmailVerified: boolean
-  isActive: boolean
-  isLocked: boolean
-  lastLoginAt?: Date
-  failedLoginAttempts: number
-  twoFactorEnabled: boolean
-  twoFactorSecret?: string
-  deletedAt?: Date
-  createdAt: Date
-  updatedAt: Date
+  patientId?: Id
+  doctorId?: Id
+  labId?: Id
 }
 
-const UserSchema = new Schema<IUser>({
-  phoneNumber: { type: String, required: true, unique: true, index: true },
-  email: { type: String, unique: true, sparse: true, index: true },
-  passwordHash: { type: String },
-
-  role: {
-    type: String,
-    enum: ['PATIENT', 'DOCTOR', 'LAB_OPERATOR', 'PLATFORM_ADMIN'],
-    required: true,
-    index: true,
-  },
-
-  patientId: { type: Schema.Types.ObjectId, ref: 'Patient' },
-  doctorId: { type: Schema.Types.ObjectId, ref: 'Doctor' },
-  labId: { type: Schema.Types.ObjectId, ref: 'Lab' },
-  mustChangePassword: { type: Boolean, default: false },
-
-  isPhoneVerified: { type: Boolean, default: false },
-  isEmailVerified: { type: Boolean, default: false },
-  isActive: { type: Boolean, default: true },
-  isLocked: { type: Boolean, default: false },
-
-  lastLoginAt: Date,
-  failedLoginAttempts: { type: Number, default: 0 },
-  twoFactorEnabled: { type: Boolean, default: false },
-  twoFactorSecret: String,
-
-  deletedAt: Date,
-}, { timestamps: true })
-
-UserSchema.index({ role: 1, isActive: 1 })
-
-export const User = mongoose.model<IUser>('User', UserSchema)
+export { User }

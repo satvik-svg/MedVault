@@ -40,7 +40,7 @@ export async function searchDrugs(query: string, limit = 10): Promise<Array<Reco
     .map((drug) => ({
       ...drug,
       matchScore: scoreDrug(trimmed, drug),
-      isIndianBrand: (drug.indianBrandNames || []).some((brand) => regex.test(brand.brand || '')),
+      isIndianBrand: (drug.indianBrandNames || []).some((brand: any) => regex.test(brand.brand || '')),
     }))
     .sort((a, b) => Number(b.matchScore) - Number(a.matchScore))
 }

@@ -92,7 +92,7 @@ export async function createLabOrder(input: CreateLabOrderInput, doctorUser: Acc
   }
 
   const tests = input.tests.map((test) => {
-    const labTest = lab.testsOffered.find((offered) => offered.loincCode === test.loincCode)
+    const labTest = lab.testsOffered.find((offered: any) => offered.loincCode === test.loincCode)
     return {
       loincCode: test.loincCode,
       displayName: labTest?.displayName || test.displayName || test.loincCode,

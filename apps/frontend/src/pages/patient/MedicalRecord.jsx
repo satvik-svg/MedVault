@@ -18,15 +18,15 @@ const filters = ['All', 'Prescriptions', 'Lab Reports', 'Visits']
 
 const records = [
   { month: 'APR 2025', items: [
-    { type: 'prescription', date: '12 Apr 2025', title: 'Amoxicillin 500mg', doctor: 'Dr. Sharma', clinic: 'City Clinic', hash: '0x7f3a...d4c2', level: 'safe' },
+    { type: 'prescription', date: '12 Apr 2025', title: 'Amoxicillin 500mg', doctor: 'Dr. Sharma', practice: 'Dr. Sharma Practice', hash: '0x7f3a...d4c2', level: 'safe' },
     { type: 'lab', date: '8 Apr 2025', title: 'HbA1c', result: '6.8%', range: '<5.7%', verified: true, blockchain: { status: 'ANCHORED', contentHash: '0x7f3a8b10d4c2' } },
   ]},
   { month: 'MAR 2025', items: [
-    { type: 'prescription', date: '22 Mar 2025', title: 'Metformin 500mg (renewed)', doctor: 'Dr. Gupta', clinic: 'Apollo Clinic', hash: '0x9e1b...77f8', level: 'safe' },
-    { type: 'visit', date: '15 Mar 2025', title: 'Routine Check-up', doctor: 'Dr. Sharma', clinic: 'City Clinic' },
+    { type: 'prescription', date: '22 Mar 2025', title: 'Metformin 500mg (renewed)', doctor: 'Dr. Gupta', practice: 'Apollo OPD', hash: '0x9e1b...77f8', level: 'safe' },
+    { type: 'visit', date: '15 Mar 2025', title: 'Routine Check-up', doctor: 'Dr. Sharma', practice: 'Dr. Sharma Practice' },
   ]},
   { month: 'JAN 2025', items: [
-    { type: 'prescription', date: '3 Jan 2025', title: 'Amlodipine 5mg', doctor: 'Dr. Sharma', clinic: 'City Clinic', hash: '0xa3c4...2e91', level: 'moderate' },
+    { type: 'prescription', date: '3 Jan 2025', title: 'Amlodipine 5mg', doctor: 'Dr. Sharma', practice: 'Dr. Sharma Practice', hash: '0xa3c4...2e91', level: 'moderate' },
   ]},
 ]
 
@@ -66,7 +66,7 @@ export default function MedicalRecord() {
                         {item.level && <span className={`badge badge-${item.level}`}>{item.level}</span>}
                       </div>
                       <p className="timeline__card-meta">
-                        {item.doctor && <>{item.doctor} · {item.clinic} · </>}{item.date}
+                        {item.doctor && <>{item.doctor} · {item.practice} · </>}{item.date}
                       </p>
                       {item.result && (
                         <p style={{ fontSize: 'var(--text-sm)', marginTop: 'var(--space-2)' }}>

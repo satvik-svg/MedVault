@@ -93,7 +93,7 @@ router.get('/:id/quick-view', requireRole('DOCTOR'), async (req, res) => {
     ])
     if (!patient) throw new Error('Patient not found')
 
-    const latestLabs = labReports.flatMap((report) => (report.results || []).map((result) => ({
+    const latestLabs = labReports.flatMap((report: any) => (report.results || []).map((result: any) => ({
       reportId: report._id,
       reportDate: report.reportDate,
       loincCode: result.loincCode,

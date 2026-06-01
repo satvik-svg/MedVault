@@ -125,25 +125,25 @@ export default function PatientDashboard() {
           </div>
         </motion.div>
 
-        {/* Upcoming Appointments */}
+        {/* Recent Visits */}
         <motion.div className="card card--no-hover" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }} style={{ marginTop: 'var(--space-6)' }}>
           <h3 className="dashboard__section-title">Recent Visits</h3>
-          <div className="appointments-list">
+          <div className="visit-list">
             {visits.length === 0 && <p style={{ color: 'var(--color-gray-600)', fontSize: 'var(--text-sm)' }}>No recent visits found.</p>}
             {visits.map((event) => {
               const apt = event.data
               return (
-              <div key={apt._id} className="appointment-item">
-                <div className="appointment-item__date">
+              <div key={apt._id} className="visit-item">
+                <div className="visit-item__date">
                   <Calendar size={16} color="var(--color-primary-500)" />
                   <span>{formatDate(apt.startedAt)}</span>
                   <Clock size={14} color="var(--color-gray-400)" />
-                  <span className="appointment-item__time">{formatTime(apt.startedAt)}</span>
+                  <span className="visit-item__time">{formatTime(apt.startedAt)}</span>
                 </div>
-                <div className="appointment-item__info">
+                <div className="visit-item__info">
                   <strong>{apt.doctorId?.fullName || 'Doctor'}</strong>
                   <span className="badge badge-teal">{apt.status}</span>
-                  <span className="appointment-item__type">{apt.type}</span>
+                  <span className="visit-item__type">{apt.type}</span>
                 </div>
               </div>
             )})}
@@ -155,7 +155,7 @@ export default function PatientDashboard() {
           <div style={{ display: 'grid', gap: 'var(--space-3)' }}>
             {labOrders.length === 0 && <p style={{ color: 'var(--color-gray-600)', fontSize: 'var(--text-sm)' }}>No lab orders yet.</p>}
             {labOrders.slice(0, 4).map((order) => (
-              <div key={order._id} className="appointment-item">
+              <div key={order._id} className="visit-item">
                 <div><strong>{order.labId?.displayName || 'Lab order'}</strong><span style={{ display: 'block', fontSize: 'var(--text-xs)', color: 'var(--color-gray-500)' }}>{(order.tests || []).map((test) => test.displayName).join(', ')}</span></div>
                 <span className="badge badge-teal">{order.status}</span>
               </div>
@@ -180,4 +180,3 @@ function formatTime(value) {
   if (!value) return ''
   return new Date(value).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })
 }
-

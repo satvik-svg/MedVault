@@ -2,7 +2,6 @@ export {
   patientSignup,
   verifyOtpAndCreatePatient,
   doctorSignup,
-  clinicSignup,
   login,
   completeFirstTimeLogin,
   refreshTokens,

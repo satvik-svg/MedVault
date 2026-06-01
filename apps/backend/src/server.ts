@@ -5,7 +5,6 @@ import { generalRateLimiter } from './middleware/rateLimiter.ts'
 import {
   authRoutes,
   patientRoutes,
-  clinicRoutes,
   doctorRoutes,
   adminRoutes,
   onboardingRoutes,
@@ -27,7 +26,6 @@ app.use(generalRateLimiter)
 // Routes
 app.use('/api/auth', authRoutes)
 app.use('/api/patient', patientRoutes)
-app.use('/api/clinic', clinicRoutes)
 app.use('/api/doctor', doctorRoutes)
 app.use('/api/admin', adminRoutes)
 app.use('/api/onboarding', onboardingRoutes)

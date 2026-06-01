@@ -6,10 +6,6 @@ export const config = {
   port: parseInt(process.env.PORT || '4000', 10),
   apiBaseUrl: process.env.API_BASE_URL || 'http://localhost:4000',
 
-  mongodb: {
-    uri: process.env.MONGODB_URI || 'mongodb://localhost:27017/medvault',
-  },
-
   database: {
     url: process.env.DATABASE_URL || process.env.POSTGRES_URL || '',
   },

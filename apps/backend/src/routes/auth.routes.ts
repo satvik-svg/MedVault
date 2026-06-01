@@ -3,7 +3,6 @@ import {
   requestOtp,
   verifyOtp,
   doctorRegister,
-  clinicRegister,
   loginHandler,
   firstTimeLoginHandler,
   refreshHandler,
@@ -16,7 +15,6 @@ const router: RouterType = Router()
 router.post('/patient/signup-otp', otpRateLimiter, requestOtp)
 router.post('/patient/verify-otp', verifyOtp)
 router.post('/doctor/signup', doctorRegister)
-router.post('/clinic/signup', clinicRegister)
 router.post('/login', loginRateLimiter, loginHandler)
 router.post('/login/first-time', loginRateLimiter, firstTimeLoginHandler)
 router.post('/refresh', refreshHandler)

@@ -64,8 +64,8 @@ export async function runMedicationSafetyChecks(
     if (
       textIncludes(genericName, allergen)
       || textIncludes(drugClass, allergen)
-      || (drug?.brandNames || []).some((brand) => textIncludes(brand, allergen))
-      || (drug?.indianBrandNames || []).some((brand) => textIncludes(brand.brand, allergen))
+      || (drug?.brandNames || []).some((brand: any) => textIncludes(brand, allergen))
+      || (drug?.indianBrandNames || []).some((brand: any) => textIncludes(brand.brand, allergen))
     ) {
       result.allergyConflict = true
       result.allergyDetails = `Patient has ${allergy.severity?.toLowerCase() || 'documented'} allergy to ${allergen}. ${genericName || medication.rxnormCui} matches this allergy or drug class.`
@@ -105,13 +105,13 @@ export async function runMedicationSafetyChecks(
     }
   }
 
-  const renalCondition = (patient.chronicConditions || []).find((condition) => /^N18\./.test(condition.icd10Code))
+  const renalCondition = (patient.chronicConditions || []).find((condition: any) => /^N18\./.test(condition.icd10Code))
   if (renalCondition && drug?.renalDoseAdjust?.required) {
     result.doseAdjustmentRecommended = true
     result.doseAdjustmentReason = `Patient has CKD (${renalCondition.displayName || renalCondition.icd10Code}). ${drug.renalDoseAdjust.notes || 'Renal dose adjustment may be required.'}`
   }
 
-  const hepaticCondition = (patient.chronicConditions || []).find((condition) => condition.icd10Code.startsWith('K7'))
+  const hepaticCondition = (patient.chronicConditions || []).find((condition: any) => condition.icd10Code.startsWith('K7'))
   if (hepaticCondition && drug?.hepaticDoseAdjust?.required) {
     result.doseAdjustmentRecommended = true
     result.doseAdjustmentReason = [

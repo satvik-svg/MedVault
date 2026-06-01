@@ -3,7 +3,6 @@ import {
   patientSignup,
   verifyOtpAndCreatePatient,
   doctorSignup,
-  clinicSignup,
   login,
   completeFirstTimeLogin,
   refreshTokens,
@@ -36,15 +35,6 @@ export async function doctorRegister(req: Request, res: Response): Promise<void>
     res.status(201).json(result)
   } catch (error) {
     res.status(400).json({ error: error instanceof Error ? error.message : 'Doctor registration failed' })
-  }
-}
-
-export async function clinicRegister(req: Request, res: Response): Promise<void> {
-  try {
-    const result = await clinicSignup(req.body)
-    res.status(201).json(result)
-  } catch (error) {
-    res.status(400).json({ error: error instanceof Error ? error.message : 'Clinic registration failed' })
   }
 }
 

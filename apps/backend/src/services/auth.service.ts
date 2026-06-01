@@ -1,5 +1,4 @@
 import bcrypt from 'bcrypt'
-import mongoose from 'mongoose'
 import { User } from '../models/User.ts'
 import { Patient } from '../models/Patient.ts'
 import { Doctor } from '../models/Doctor.ts'
@@ -72,52 +71,40 @@ export async function verifyOtpAndCreatePatient(
     return { accessToken, refreshToken, user: { id: existingUser._id, role: existingUser.role } }
   }
 
-  const session = await mongoose.startSession()
-  try {
-    session.startTransaction()
+  const user = await User.create({
+    phoneNumber,
+    role: 'PATIENT',
+    isPhoneVerified: true,
+  })
 
-    const user = await User.create([{
-      phoneNumber,
-      role: 'PATIENT',
-      isPhoneVerified: true,
-    }], { session })
+  const medvaultId = generateMedvaultId()
+  const patient = await Patient.create({
+    userId: user._id,
+    medvaultId,
+    fullName: '',
+    dateOfBirth: new Date(),
+    sex: 'O',
+  })
 
-    const medvaultId = generateMedvaultId()
-    const patient = await Patient.create([{
-      userId: user[0]._id,
-      medvaultId,
-      fullName: '',
-      dateOfBirth: new Date(),
-      sex: 'O',
-    }], { session })
+  await User.updateOne({ _id: user._id }, { patientId: patient._id })
 
-    await User.updateOne({ _id: user[0]._id }, { patientId: patient[0]._id }, { session })
+  const tokenId = generateTokenId()
+  const accessToken = issueAccessToken({
+    userId: user._id.toString(),
+    role: 'PATIENT',
+    patientId: patient._id.toString(),
+  })
+  const refreshToken = issueRefreshToken(user._id.toString(), tokenId)
+  await redis.setex(`refresh:${user._id}:${tokenId}`, 30 * 24 * 3600, '1')
 
-    await session.commitTransaction()
-
-    const tokenId = generateTokenId()
-    const accessToken = issueAccessToken({
-      userId: user[0]._id.toString(),
-      role: 'PATIENT',
-      patientId: patient[0]._id.toString(),
-    })
-    const refreshToken = issueRefreshToken(user[0]._id.toString(), tokenId)
-    await redis.setex(`refresh:${user[0]._id}:${tokenId}`, 30 * 24 * 3600, '1')
-
-    return {
-      accessToken,
-      refreshToken,
-      user: { id: user[0]._id, role: 'PATIENT', patientId: patient[0]._id, medvaultId },
-    }
-  } catch (e) {
-    await session.abortTransaction()
-    throw e
-  } finally {
-    session.endSession()
+  return {
+    accessToken,
+    refreshToken,
+    user: { id: user._id, role: 'PATIENT', patientId: patient._id, medvaultId },
   }
 }
 
-// ─── Doctor/Clinic Signup ───────────────────────────────────────────────────
+// ─── Doctor Signup ──────────────────────────────────────────────────────────
 
 export async function doctorSignup(
   data: {
@@ -144,67 +131,51 @@ export async function doctorSignup(
 
   const passwordHash = await bcrypt.hash(data.password, 12)
 
-  const session = await mongoose.startSession()
-  try {
-    session.startTransaction()
+  const user = await User.create({
+    phoneNumber: data.phoneNumber,
+    email: data.email,
+    passwordHash,
+    role: 'DOCTOR',
+    isPhoneVerified: false,
+    isEmailVerified: false,
+  })
 
-    const user = await User.create([{
-      phoneNumber: data.phoneNumber,
-      email: data.email,
-      passwordHash,
-      role: 'DOCTOR',
-      isPhoneVerified: false,
-      isEmailVerified: false,
-    }], { session })
-
-    const doctor = await Doctor.create([{
-      userId: user[0]._id,
-      fullName: data.fullName,
-      nmcRegNumber: data.nmcRegNumber,
-      stateMedicalCouncil: data.stateMedicalCouncil,
-      specializations: data.specializations || [],
-      qualifications: data.qualifications || [],
-      practice: {
-        displayName: data.practice?.displayName || `${data.fullName}'s Practice`,
-        address: {
-          city: data.practice?.address?.city || 'UNKNOWN',
-          line1: data.practice?.address?.line1,
-          line2: data.practice?.address?.line2,
-          state: data.practice?.address?.state,
-          pincode: data.practice?.address?.pincode,
-        },
-        phone: data.practice?.phone || data.phoneNumber,
-        consultationFee: data.practice?.consultationFee,
-        operatingHours: [],
+  const doctor = await Doctor.create({
+    userId: user._id,
+    fullName: data.fullName,
+    nmcRegNumber: data.nmcRegNumber,
+    stateMedicalCouncil: data.stateMedicalCouncil,
+    specializations: data.specializations || [],
+    qualifications: data.qualifications || [],
+    practice: {
+      displayName: data.practice?.displayName || `${data.fullName}'s Practice`,
+      address: {
+        city: data.practice?.address?.city || 'UNKNOWN',
+        line1: data.practice?.address?.line1,
+        line2: data.practice?.address?.line2,
+        state: data.practice?.address?.state,
+        pincode: data.practice?.address?.pincode,
       },
-      onboarding: { method: 'SELF_SIGNUP', initialLoginCompleted: false },
-    }], { session })
+      phone: data.practice?.phone || data.phoneNumber,
+      consultationFee: data.practice?.consultationFee,
+      operatingHours: [],
+    },
+    onboarding: { method: 'SELF_SIGNUP', initialLoginCompleted: false },
+  })
 
-    await User.updateOne({ _id: user[0]._id }, { doctorId: doctor[0]._id }, { session })
+  await User.updateOne({ _id: user._id }, { doctorId: doctor._id })
 
-    await session.commitTransaction()
+  const tokenId = generateTokenId()
+  const accessToken = issueAccessToken({
+    userId: user._id.toString(),
+    role: 'DOCTOR',
+    doctorId: doctor._id.toString(),
+    trustLevel: 'PENDING',
+  })
+  const refreshToken = issueRefreshToken(user._id.toString(), tokenId)
+  await redis.setex(`refresh:${user._id}:${tokenId}`, 30 * 24 * 3600, '1')
 
-    const tokenId = generateTokenId()
-    const accessToken = issueAccessToken({
-      userId: user[0]._id.toString(),
-      role: 'DOCTOR',
-      doctorId: doctor[0]._id.toString(),
-      trustLevel: 'PENDING',
-    })
-    const refreshToken = issueRefreshToken(user[0]._id.toString(), tokenId)
-    await redis.setex(`refresh:${user[0]._id}:${tokenId}`, 30 * 24 * 3600, '1')
-
-    return { accessToken, refreshToken }
-  } catch (e) {
-    await session.abortTransaction()
-    throw e
-  } finally {
-    session.endSession()
-  }
-}
-
-export async function clinicSignup(_data?: unknown): Promise<never> {
-  throw new Error('Clinic admin signup has been removed. Use assisted doctor/lab onboarding.')
+  return { accessToken, refreshToken }
 }
 
 // ─── Login ──────────────────────────────────────────────────────────────────

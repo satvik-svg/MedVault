@@ -14,25 +14,6 @@ vi.mock('ioredis', () => {
   return { default: MockRedis, Redis: MockRedis }
 })
 
-vi.mock('mongoose', () => ({
-  default: {
-    connect: vi.fn().mockResolvedValue(undefined),
-    connection: { on: vi.fn() },
-    model: vi.fn(),
-    startSession: vi.fn(() => ({
-      startTransaction: vi.fn(),
-      commitTransaction: vi.fn().mockResolvedValue(undefined),
-      abortTransaction: vi.fn().mockResolvedValue(undefined),
-      endSession: vi.fn(),
-    })),
-    Schema: class {},
-    SchemaTypes: { ObjectId: String, Mixed: Object },
-    modelNames: [],
-  },
-  Schema: class {},
-  SchemaTypes: { ObjectId: String, Mixed: Object },
-}))
-
 vi.mock('bcrypt', () => ({
   default: {
     hash: vi.fn((data: string) => Promise.resolve(`hashed_${data}`)),
@@ -125,10 +106,10 @@ describe('Helper Utilities', () => {
 describe('QR Signing Utilities', () => {
   it('signs and verifies a QR payload', async () => {
     const { signPayload, verifySignedPayload } = await import('../src/utils/qr.ts')
-    const signed = signPayload({ typ: 'EMERGENCY', pid: 'MV-2026-ABCDE', ver: 1 }, 60)
+    const signed = signPayload({ typ: 'PRESCRIPTION', pid: 'MV-RX-2026-ABCDE', ver: 1 }, 60)
     const payload = verifySignedPayload(signed.signedPayload)
-    expect(payload.typ).toBe('EMERGENCY')
-    expect(payload.pid).toBe('MV-2026-ABCDE')
+    expect(payload.typ).toBe('PRESCRIPTION')
+    expect(payload.pid).toBe('MV-RX-2026-ABCDE')
     expect(payload.nonce).toBeTruthy()
   })
 
@@ -138,22 +119,6 @@ describe('QR Signing Utilities', () => {
     const [payload, signature] = signed.signedPayload.split('.')
     const tamperedPayload = Buffer.from(JSON.stringify({ type: 'PRESCRIPTION', pid: 'rx-2', iat: 1, exp: 9999999999, nonce: 'x' })).toString('base64url')
     expect(() => verifySignedPayload(`${tamperedPayload}.${signature || payload}`)).toThrow()
-  })
-})
-
-describe('GST Verification', () => {
-  it('rejects invalid GSTIN format', async () => {
-    const { verifyGstin } = await import('../src/verification/gst.verification.ts')
-    const result = await verifyGstin('INVALID')
-    expect(result.verified).toBe(false)
-    expect(result.reason).toBe('Invalid GSTIN format')
-  })
-
-  it('accepts valid-looking GSTIN', async () => {
-    const { verifyGstin } = await import('../src/verification/gst.verification.ts')
-    // Use a valid prefix from the mock
-    const result = await verifyGstin('24ABCDE1234A1Z9')
-    expect(result.verified).toBe(true)
   })
 })
 

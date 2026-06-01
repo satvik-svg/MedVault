@@ -54,14 +54,14 @@ export async function discoverLabs(params: LabDiscoveryParams): Promise<unknown[
   let favorites: string[] = []
   if (params.doctorId) {
     const doctor = await Doctor.findById(params.doctorId).select('preferredLabIds')
-    favorites = (doctor?.preferredLabIds || []).map((id) => id.toString())
+    favorites = (doctor?.preferredLabIds || []).map((id: any) => id.toString())
   }
 
-  const results = labs.map((lab) => {
+  const results = labs.map((lab: any) => {
     const matchingTests = params.loincCodes?.length
-      ? lab.testsOffered.filter((test) => test.loincCode && params.loincCodes?.includes(test.loincCode))
+      ? lab.testsOffered.filter((test: any) => test.loincCode && params.loincCodes?.includes(test.loincCode))
       : lab.testsOffered
-    const totalEstimatedPrice = matchingTests.reduce((sum, test) => sum + (test.price || 0), 0)
+    const totalEstimatedPrice = matchingTests.reduce((sum: number, test: any) => sum + (test.price || 0), 0)
     const distance = params.geoNear ? haversineKm(params.geoNear, lab.address.geoLocation?.coordinates) : null
 
     return {
@@ -74,13 +74,13 @@ export async function discoverLabs(params: LabDiscoveryParams): Promise<unknown[
       currentStatus: getCurrentOpenStatus(lab),
       pricing: {
         totalEstimatedPrice,
-        perTest: matchingTests.map((test) => ({
+        perTest: matchingTests.map((test: any) => ({
           loincCode: test.loincCode,
           name: test.displayName,
           price: test.price,
         })),
       },
-      turnaroundTime: { maxHours: Math.max(0, ...matchingTests.map((test) => test.tatHours || 0)) },
+      turnaroundTime: { maxHours: Math.max(0, ...matchingTests.map((test: any) => test.tatHours || 0)) },
       homeCollection: {
         available: lab.homeCollectionAvailable,
         charge: lab.homeCollectionCharge,

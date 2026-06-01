@@ -1,4 +1,3 @@
-import mongoose from 'mongoose'
 import { Doctor } from '../models/Doctor.ts'
 import { sendWhatsApp } from '../services/notification.service.ts'
 import { User } from '../models/User.ts'
@@ -39,7 +38,7 @@ export async function approveDoctorNmc(doctorId: string, reviewedBy: string, not
   doctor.verification.nmcVerified = true
   doctor.verification.nmcVerifiedAt = new Date()
   doctor.verification.manualReviewStatus = 'APPROVED'
-  doctor.verification.reviewedBy = new mongoose.Types.ObjectId(reviewedBy) as any
+  doctor.verification.reviewedBy = reviewedBy
   doctor.verification.reviewedAt = new Date()
   doctor.verification.reviewNotes = notes
   doctor.trustLevel = 'VERIFIED'
@@ -58,7 +57,7 @@ export async function rejectDoctorNmc(doctorId: string, reviewedBy: string, reas
 
   doctor.trustLevel = 'REJECTED'
   doctor.verification.manualReviewStatus = 'REJECTED'
-  doctor.verification.reviewedBy = new mongoose.Types.ObjectId(reviewedBy) as any
+  doctor.verification.reviewedBy = reviewedBy
   doctor.verification.reviewedAt = new Date()
   doctor.verification.reviewNotes = reason
   await doctor.save()
@@ -72,7 +71,7 @@ export async function requestDoctorMoreDocs(doctorId: string, reviewedBy: string
   if (!doctor) throw new Error('Doctor not found')
 
   doctor.verification.manualReviewStatus = 'NEEDS_MORE_DOCS'
-  doctor.verification.reviewedBy = new mongoose.Types.ObjectId(reviewedBy) as any
+  doctor.verification.reviewedBy = reviewedBy
   doctor.verification.reviewedAt = new Date()
   doctor.verification.reviewNotes = notes
   await doctor.save()

@@ -99,21 +99,21 @@ export default function DoctorPortal() {
           <h3 className="dashboard__section-title">Today's Patients</h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
             {queue.length === 0 && <p style={{ color: 'var(--color-gray-600)', fontSize: 'var(--text-sm)' }}>No patients in today&apos;s queue.</p>}
-            {queue.map((appointment) => {
-              const patient = appointment.patientId || {}
+            {queue.map((visit) => {
+              const patient = visit.patientId || {}
               return (
-              <div key={appointment._id} className="appointment-item">
+              <div key={visit._id} className="visit-item">
                 <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
                   <div className="dashboard__avatar" style={{ width: 36, height: 36, fontSize: 'var(--text-xs)' }}>{initials(patient.fullName || 'PT')}</div>
                   <div>
                     <strong style={{ fontSize: 'var(--text-sm)' }}>{patient.fullName || 'Patient'}</strong>
-                    <span style={{ display: 'block', fontSize: 'var(--text-xs)', color: 'var(--color-gray-400)', fontFamily: 'var(--font-mono)' }}>{patient.medvaultId || appointment._id}</span>
+                    <span style={{ display: 'block', fontSize: 'var(--text-xs)', color: 'var(--color-gray-400)', fontFamily: 'var(--font-mono)' }}>{patient.medvaultId || visit._id}</span>
                   </div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
-                  <Link className="btn btn-ghost btn-sm" to={`/doctor/patient/${patient._id || appointment.patientId}`}>Open</Link>
-                  <span style={{ fontSize: 'var(--text-sm)', color: 'var(--color-gray-400)' }}>{formatTime(appointment.startedAt)}</span>
-                  <span className={`badge ${appointment.status === 'COMPLETED' ? 'badge-safe' : 'badge-teal'}`}>{appointment.status}</span>
+                  <Link className="btn btn-ghost btn-sm" to={`/doctor/patient/${patient._id || visit.patientId}`}>Open</Link>
+                  <span style={{ fontSize: 'var(--text-sm)', color: 'var(--color-gray-400)' }}>{formatTime(visit.startedAt)}</span>
+                  <span className={`badge ${visit.status === 'COMPLETED' ? 'badge-safe' : 'badge-teal'}`}>{visit.status}</span>
                 </div>
               </div>
             )})}

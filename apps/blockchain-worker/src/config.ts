@@ -3,7 +3,6 @@ import dotenv from 'dotenv'
 dotenv.config()
 
 export const config = {
-  mongoUri: process.env.MONGODB_URI || 'mongodb://localhost:27017/medvault',
   databaseUrl: process.env.DATABASE_URL || process.env.POSTGRES_URL || '',
   redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',
   queueName: process.env.BLOCKCHAIN_QUEUE_NAME || 'blockchain-audit',

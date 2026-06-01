@@ -1,27 +1,14 @@
 export enum UserRole {
   PATIENT = 'PATIENT',
   DOCTOR = 'DOCTOR',
-  CLINIC_ADMIN = 'CLINIC_ADMIN',
   LAB_OPERATOR = 'LAB_OPERATOR',
-  PHARMACY_OPERATOR = 'PHARMACY_OPERATOR',
   PLATFORM_ADMIN = 'PLATFORM_ADMIN',
 }
 
 export enum TrustLevel {
-  TIER_1_FULL = 'TIER_1_FULL',
-  TIER_2_PARTIAL = 'TIER_2_PARTIAL',
-  TIER_2_INDEPENDENT = 'TIER_2_INDEPENDENT',
-  TIER_3_UNVERIFIED = 'TIER_3_UNVERIFIED',
-  TIER_3_PENDING = 'TIER_3_PENDING',
-  TIER_4_REJECTED = 'TIER_4_REJECTED',
-}
-
-export enum ClinicType {
-  HOSPITAL = 'HOSPITAL',
-  CLINIC = 'CLINIC',
-  DIAGNOSTIC_LAB = 'DIAGNOSTIC_LAB',
-  PHARMACY = 'PHARMACY',
-  MULTI_SPECIALTY = 'MULTI_SPECIALTY',
+  VERIFIED = 'VERIFIED',
+  PENDING = 'PENDING',
+  REJECTED = 'REJECTED',
 }
 
 export enum Sex {
@@ -81,7 +68,6 @@ export enum ConsentStatus {
 export enum GrantMethod {
   EXPLICIT_WHATSAPP = 'EXPLICIT_WHATSAPP',
   AUTO_RECENT_DOCTOR = 'AUTO_RECENT_DOCTOR',
-  EMERGENCY_QR = 'EMERGENCY_QR',
 }
 
 export enum ManualReviewStatus {
@@ -94,13 +80,6 @@ export enum ManualReviewStatus {
 export enum VerificationMethod {
   AUTO_API = 'AUTO_API',
   MANUAL_DOCUMENT_REVIEW = 'MANUAL_DOCUMENT_REVIEW',
-}
-
-export enum AffiliationRole {
-  CONSULTANT = 'CONSULTANT',
-  RESIDENT = 'RESIDENT',
-  VISITING = 'VISITING',
-  OWNER = 'OWNER',
 }
 
 export enum AdherenceScore {
@@ -120,11 +99,8 @@ export enum AccessAction {
   VIEW_PATIENT = 'VIEW_PATIENT',
   CREATE_PRESCRIPTION = 'CREATE_PRESCRIPTION',
   VIEW_PRESCRIPTION = 'VIEW_PRESCRIPTION',
-  DISPENSE_PRESCRIPTION = 'DISPENSE_PRESCRIPTION',
   UPLOAD_LAB = 'UPLOAD_LAB',
   VIEW_LAB = 'VIEW_LAB',
-  EMERGENCY_QR_GENERATE = 'EMERGENCY_QR_GENERATE',
-  EMERGENCY_QR_SCAN = 'EMERGENCY_QR_SCAN',
   CONSENT_REQUEST = 'CONSENT_REQUEST',
   CONSENT_GRANT = 'CONSENT_GRANT',
   CONSENT_REVOKE = 'CONSENT_REVOKE',
@@ -145,17 +121,11 @@ export enum BlockchainStatus {
   FAILED = 'FAILED',
 }
 
-export enum EmergencyQRStatus {
-  ACTIVE = 'ACTIVE',
-  REVOKED = 'REVOKED',
-  EXPIRED = 'EXPIRED',
-}
-
 export interface AccessTokenPayload {
   userId: string
   role: UserRole
   patientId?: string
   doctorId?: string
-  clinicId?: string
+  labId?: string
   trustLevel?: string
 }

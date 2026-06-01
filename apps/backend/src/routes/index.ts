@@ -1,6 +1,5 @@
 export { default as authRoutes } from './auth.routes.ts'
 export { default as patientRoutes } from './patient.routes.ts'
-export { default as clinicRoutes } from './clinic.routes.ts'
 export { default as doctorRoutes } from './doctor.routes.ts'
 export { default as adminRoutes } from './admin.routes.ts'
 export { default as onboardingRoutes } from './onboarding.routes.ts'

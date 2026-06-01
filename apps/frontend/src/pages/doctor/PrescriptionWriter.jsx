@@ -111,7 +111,7 @@ export default function PrescriptionWriter() {
         <motion.div className="card card--no-hover" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
           <h3 className="dashboard__section-title">New Prescription</h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
-            {!params.patientId && <div className="form-group"><label className="form-label">Patient ID</label><input className="form-input" value={patientId} onChange={e => setPatientId(e.target.value)} placeholder="Mongo patient ID from QR scan" /></div>}
+            {!params.patientId && <div className="form-group"><label className="form-label">Patient ID</label><input className="form-input" value={patientId} onChange={e => setPatientId(e.target.value)} placeholder="Patient ID from QR scan" /></div>}
             <DrugInput drugName={drugName} setDrugName={setDrugName} showSug={showSug} setShowSug={setShowSug} suggestions={suggestions} selectDrug={selectDrug} setCheck={setCheck} />
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 'var(--space-4)' }}>
               <div className="form-group"><label className="form-label">Strength</label><input className="form-input" value={strength} onChange={e => setStrength(e.target.value)} placeholder="500mg" /></div>

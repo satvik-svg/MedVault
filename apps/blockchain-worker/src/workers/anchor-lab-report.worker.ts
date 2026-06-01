@@ -1,5 +1,5 @@
 import type { Job } from 'bullmq'
-import { mongoose } from '../db.ts'
+import { prisma } from '../db.ts'
 import { config } from '../config.ts'
 import { ContractClient } from '../services/contract-client.ts'
 import { canonicalizeLabReport, sha256HexPrefixed } from '../utils/hash.ts'
@@ -8,17 +8,14 @@ const contract = new ContractClient()
 
 export async function anchorLabReport(job: Job): Promise<Record<string, unknown>> {
   const labReportId = String(job.data.labReportId)
-  const db = mongoose.connection.db
-  if (!db) throw new Error('MongoDB connection is not ready')
-
-  const labReport = await db.collection('labreports').findOne({ _id: new mongoose.Types.ObjectId(labReportId) })
+  const labReport = await prisma.labReport.findUnique({ where: { id: labReportId } })
   if (!labReport) throw new Error('Lab report not found')
 
   if (labReport.source !== 'MEDVAULT_NATIVE_LAB_PARTNER') {
-    await db.collection('labreports').updateOne(
-      { _id: labReport._id },
-      { $set: { 'blockchain.status': 'NOT_QUEUED' } }
-    )
+    await prisma.labReport.update({
+      where: { id: labReport.id },
+      data: { blockchain: { ...(labReport.blockchain || {}), status: 'NOT_QUEUED' } },
+    })
     return { skipped: true, reason: 'Lab report is not lab partner issued' }
   }
 
@@ -27,26 +24,28 @@ export async function anchorLabReport(job: Job): Promise<Record<string, unknown>
   const patientIdHash = sha256HexPrefixed(`${String(labReport.patientId)}:${config.hashSalt}`)
   const issuerIdHash = sha256HexPrefixed(`${String(labReport.labId || 'external')}:${config.hashSalt}`)
 
-  await db.collection('labreports').updateOne(
-    { _id: labReport._id },
-    { $set: { 'blockchain.status': 'PENDING', 'blockchain.contentHash': contentHash } }
-  )
+  await prisma.labReport.update({
+    where: { id: labReport.id },
+    data: { blockchain: { ...(labReport.blockchain || {}), status: 'PENDING', contentHash } },
+  })
 
   const tx = await contract.anchorRecord(recordIdHash, contentHash, 1, patientIdHash, issuerIdHash)
   const receipt = await tx.wait()
 
-  await db.collection('labreports').updateOne(
-    { _id: labReport._id },
-    {
-      $set: {
-        'blockchain.status': 'ANCHORED',
-        'blockchain.txHash': receipt.hash,
-        'blockchain.blockNumber': receipt.blockNumber,
-        'blockchain.anchoredAt': new Date(),
-        blockchainTxHash: receipt.hash,
+  await prisma.labReport.update({
+    where: { id: labReport.id },
+    data: {
+      blockchain: {
+        ...(labReport.blockchain || {}),
+        status: 'ANCHORED',
+        txHash: receipt.hash,
+        blockNumber: receipt.blockNumber,
+        anchoredAt: new Date().toISOString(),
+        contentHash,
       },
-    }
-  )
+      blockchainTxHash: receipt.hash,
+    },
+  })
 
   return { txHash: receipt.hash, blockNumber: receipt.blockNumber, contentHash }
 }

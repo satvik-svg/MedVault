@@ -181,3 +181,138 @@ CREATE INDEX IF NOT EXISTS idx_visits_doctor_started ON visits (doctor_id, start
 CREATE INDEX IF NOT EXISTS idx_lab_orders_lab_status ON lab_orders (lab_id, status);
 CREATE INDEX IF NOT EXISTS idx_lab_reports_patient_date ON lab_reports (patient_id, report_date DESC);
 CREATE INDEX IF NOT EXISTS idx_access_logs_patient_created ON access_logs (patient_id, created_at DESC);
+
+CREATE TABLE IF NOT EXISTS consents (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  patient_id UUID NOT NULL,
+  grantee_user_id UUID NOT NULL,
+  grantee_type TEXT NOT NULL,
+  scope JSONB NOT NULL DEFAULT '[]'::jsonb,
+  granted_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  expires_at TIMESTAMPTZ NOT NULL,
+  status TEXT NOT NULL DEFAULT 'ACTIVE',
+  grant_method TEXT,
+  revoked_at TIMESTAMPTZ,
+  revoked_reason TEXT,
+  nonce TEXT NOT NULL UNIQUE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS consent_requests (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  patient_id UUID NOT NULL,
+  grantee_user_id UUID NOT NULL,
+  grantee_type TEXT NOT NULL,
+  scope JSONB NOT NULL DEFAULT '[]'::jsonb,
+  purpose TEXT NOT NULL DEFAULT 'OTHER',
+  status TEXT NOT NULL DEFAULT 'PENDING',
+  expires_at TIMESTAMPTZ NOT NULL,
+  resolved_at TIMESTAMPTZ,
+  nonce TEXT NOT NULL UNIQUE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+ALTER TABLE users ADD COLUMN IF NOT EXISTS must_change_password BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS is_phone_verified BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS is_email_verified BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS is_locked BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS last_login_at TIMESTAMPTZ;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS failed_login_attempts INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS two_factor_enabled BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS two_factor_secret TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ;
+
+ALTER TABLE patients ADD COLUMN IF NOT EXISTS emergency_contact JSONB NOT NULL DEFAULT '{}'::jsonb;
+
+ALTER TABLE doctors ADD COLUMN IF NOT EXISTS photo_url TEXT;
+ALTER TABLE doctors ADD COLUMN IF NOT EXISTS hpr_id TEXT;
+ALTER TABLE doctors ADD COLUMN IF NOT EXISTS languages JSONB NOT NULL DEFAULT '[]'::jsonb;
+ALTER TABLE doctors ADD COLUMN IF NOT EXISTS years_experience INTEGER;
+ALTER TABLE doctors ADD COLUMN IF NOT EXISTS hospital_affiliations JSONB NOT NULL DEFAULT '[]'::jsonb;
+ALTER TABLE doctors ADD COLUMN IF NOT EXISTS onboarding JSONB NOT NULL DEFAULT '{}'::jsonb;
+ALTER TABLE doctors ADD COLUMN IF NOT EXISTS preferred_lab_ids UUID[] NOT NULL DEFAULT '{}';
+ALTER TABLE doctors ADD COLUMN IF NOT EXISTS stats JSONB NOT NULL DEFAULT '{}'::jsonb;
+ALTER TABLE doctors ADD COLUMN IF NOT EXISTS is_active BOOLEAN NOT NULL DEFAULT TRUE;
+ALTER TABLE doctors ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ;
+
+ALTER TABLE labs ADD COLUMN IF NOT EXISTS website TEXT;
+ALTER TABLE labs ADD COLUMN IF NOT EXISTS logo_url TEXT;
+ALTER TABLE labs ADD COLUMN IF NOT EXISTS trade_license_url TEXT;
+ALTER TABLE labs ADD COLUMN IF NOT EXISTS premises_photo_url TEXT;
+ALTER TABLE labs ADD COLUMN IF NOT EXISTS operating_hours JSONB NOT NULL DEFAULT '[]'::jsonb;
+ALTER TABLE labs ADD COLUMN IF NOT EXISTS sample_collection_hours JSONB NOT NULL DEFAULT '[]'::jsonb;
+ALTER TABLE labs ADD COLUMN IF NOT EXISTS holiday_dates JSONB NOT NULL DEFAULT '[]'::jsonb;
+ALTER TABLE labs ADD COLUMN IF NOT EXISTS home_collection_available BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE labs ADD COLUMN IF NOT EXISTS home_collection_charge DOUBLE PRECISION;
+ALTER TABLE labs ADD COLUMN IF NOT EXISTS home_collection_cities JSONB NOT NULL DEFAULT '[]'::jsonb;
+ALTER TABLE labs ADD COLUMN IF NOT EXISTS operator_user_ids UUID[] NOT NULL DEFAULT '{}';
+ALTER TABLE labs ADD COLUMN IF NOT EXISTS onboarding JSONB NOT NULL DEFAULT '{}'::jsonb;
+ALTER TABLE labs ADD COLUMN IF NOT EXISTS stats JSONB NOT NULL DEFAULT '{}'::jsonb;
+ALTER TABLE labs ADD COLUMN IF NOT EXISTS commercial JSONB NOT NULL DEFAULT '{}'::jsonb;
+ALTER TABLE labs ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ;
+
+ALTER TABLE visits ADD COLUMN IF NOT EXISTS consultation_fee DOUBLE PRECISION;
+ALTER TABLE visits ADD COLUMN IF NOT EXISTS payment_status TEXT;
+ALTER TABLE visits ADD COLUMN IF NOT EXISTS payment_method TEXT;
+ALTER TABLE visits ADD COLUMN IF NOT EXISTS cancelled_at TIMESTAMPTZ;
+ALTER TABLE visits ADD COLUMN IF NOT EXISTS cancel_reason TEXT;
+
+ALTER TABLE prescriptions ADD COLUMN IF NOT EXISTS source TEXT NOT NULL DEFAULT 'MEDVAULT_NATIVE';
+ALTER TABLE prescriptions ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'ISSUED';
+ALTER TABLE prescriptions ADD COLUMN IF NOT EXISTS drugs JSONB NOT NULL DEFAULT '[]'::jsonb;
+ALTER TABLE prescriptions ADD COLUMN IF NOT EXISTS diagnosis_text TEXT;
+ALTER TABLE prescriptions ADD COLUMN IF NOT EXISTS notes TEXT;
+ALTER TABLE prescriptions ADD COLUMN IF NOT EXISTS follow_up JSONB NOT NULL DEFAULT '{}'::jsonb;
+ALTER TABLE prescriptions ADD COLUMN IF NOT EXISTS pdf_url TEXT;
+ALTER TABLE prescriptions ADD COLUMN IF NOT EXISTS verification_qr JSONB NOT NULL DEFAULT '{}'::jsonb;
+ALTER TABLE prescriptions ADD COLUMN IF NOT EXISTS ai_assistance JSONB NOT NULL DEFAULT '{}'::jsonb;
+ALTER TABLE prescriptions ADD COLUMN IF NOT EXISTS valid_until TIMESTAMPTZ;
+ALTER TABLE prescriptions ADD COLUMN IF NOT EXISTS is_expired BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE prescriptions ADD COLUMN IF NOT EXISTS external_upload JSONB NOT NULL DEFAULT '{}'::jsonb;
+ALTER TABLE prescriptions ADD COLUMN IF NOT EXISTS attachment_urls JSONB NOT NULL DEFAULT '[]'::jsonb;
+ALTER TABLE prescriptions ADD COLUMN IF NOT EXISTS expires_at TIMESTAMPTZ;
+ALTER TABLE prescriptions ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ;
+ALTER TABLE prescriptions ADD COLUMN IF NOT EXISTS voided_at TIMESTAMPTZ;
+ALTER TABLE prescriptions ADD COLUMN IF NOT EXISTS void_reason TEXT;
+
+ALTER TABLE lab_orders ADD COLUMN IF NOT EXISTS prescription_id UUID;
+ALTER TABLE lab_orders ADD COLUMN IF NOT EXISTS home_collection_requested BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE lab_orders ADD COLUMN IF NOT EXISTS home_collection_address TEXT;
+ALTER TABLE lab_orders ADD COLUMN IF NOT EXISTS preferred_collection_time TIMESTAMPTZ;
+ALTER TABLE lab_orders ADD COLUMN IF NOT EXISTS patient_went_to_alternate_lab BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE lab_orders ADD COLUMN IF NOT EXISTS alternate_lab_name TEXT;
+ALTER TABLE lab_orders ADD COLUMN IF NOT EXISTS commercial JSONB NOT NULL DEFAULT '{}'::jsonb;
+ALTER TABLE lab_orders ADD COLUMN IF NOT EXISTS expires_at TIMESTAMPTZ;
+
+ALTER TABLE lab_reports ADD COLUMN IF NOT EXISTS uploaded_by_user_id UUID;
+ALTER TABLE lab_reports ADD COLUMN IF NOT EXISTS uploaded_by_operator_user_id UUID;
+ALTER TABLE lab_reports ADD COLUMN IF NOT EXISTS prescription_id UUID;
+ALTER TABLE lab_reports ADD COLUMN IF NOT EXISTS category TEXT;
+ALTER TABLE lab_reports ADD COLUMN IF NOT EXISTS attachment_urls JSONB NOT NULL DEFAULT '[]'::jsonb;
+ALTER TABLE lab_reports ADD COLUMN IF NOT EXISTS ocr_text TEXT;
+ALTER TABLE lab_reports ADD COLUMN IF NOT EXISTS verified_by UUID;
+ALTER TABLE lab_reports ADD COLUMN IF NOT EXISTS external_upload JSONB NOT NULL DEFAULT '{}'::jsonb;
+ALTER TABLE lab_reports ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ;
+
+ALTER TABLE access_logs ADD COLUMN IF NOT EXISTS consent_id UUID;
+ALTER TABLE access_logs ADD COLUMN IF NOT EXISTS ip TEXT;
+ALTER TABLE access_logs ADD COLUMN IF NOT EXISTS user_agent TEXT;
+ALTER TABLE access_logs ADD COLUMN IF NOT EXISTS geo_country TEXT;
+ALTER TABLE access_logs ADD COLUMN IF NOT EXISTS geo_city TEXT;
+
+ALTER TABLE ref_drugs ADD COLUMN IF NOT EXISTS atc_code TEXT;
+ALTER TABLE ref_drugs ADD COLUMN IF NOT EXISTS common_strengths JSONB NOT NULL DEFAULT '[]'::jsonb;
+ALTER TABLE ref_drugs ADD COLUMN IF NOT EXISTS forms JSONB NOT NULL DEFAULT '[]'::jsonb;
+ALTER TABLE ref_drugs ADD COLUMN IF NOT EXISTS routes JSONB NOT NULL DEFAULT '[]'::jsonb;
+ALTER TABLE ref_drugs ADD COLUMN IF NOT EXISTS pregnancy_category TEXT;
+ALTER TABLE ref_drugs ADD COLUMN IF NOT EXISTS renal_dose_adjust JSONB NOT NULL DEFAULT '{}'::jsonb;
+ALTER TABLE ref_drugs ADD COLUMN IF NOT EXISTS hepatic_dose_adjust JSONB NOT NULL DEFAULT '{}'::jsonb;
+ALTER TABLE ref_drugs ADD COLUMN IF NOT EXISTS interacting_classes JSONB NOT NULL DEFAULT '[]'::jsonb;
+
+ALTER TABLE ref_interactions ADD COLUMN IF NOT EXISTS mechanism TEXT;
+ALTER TABLE ref_interactions ADD COLUMN IF NOT EXISTS source TEXT NOT NULL DEFAULT 'CURATED';
+
+CREATE INDEX IF NOT EXISTS idx_consents_patient_grantee_status ON consents (patient_id, grantee_user_id, status);
+CREATE INDEX IF NOT EXISTS idx_consent_requests_patient_grantee_status ON consent_requests (patient_id, grantee_user_id, status);

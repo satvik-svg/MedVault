@@ -1,20 +1,20 @@
-import mongoose from 'mongoose'
 import { config } from './env.ts'
+import { connectPrisma, disconnectPrisma } from '../db/prisma.ts'
 
 export async function connectDatabase(): Promise<void> {
-  try {
-    await mongoose.connect(config.mongodb.uri)
-    console.log('[DB] Connected to MongoDB')
-  } catch (error) {
-    console.error('[DB] MongoDB connection error:', error)
+  if (!config.database.url) {
+    console.error('[DB] DATABASE_URL or POSTGRES_URL is required for Neon Postgres')
     process.exit(1)
   }
 
-  mongoose.connection.on('disconnected', () => {
-    console.warn('[DB] MongoDB disconnected')
-  })
+  try {
+    await connectPrisma()
+  } catch (error) {
+    console.error('[DB] Neon Postgres connection error:', error)
+    process.exit(1)
+  }
+}
 
-  mongoose.connection.on('error', (err) => {
-    console.error('[DB] MongoDB error:', err)
-  })
+export async function disconnectDatabase(): Promise<void> {
+  await disconnectPrisma()
 }

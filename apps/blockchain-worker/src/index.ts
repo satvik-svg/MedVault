@@ -1,7 +1,6 @@
 import { Worker } from 'bullmq'
 import { connectDatabase } from './db.ts'
 import { config } from './config.ts'
-import { anchorFulfillment } from './workers/anchor-fulfillment.worker.ts'
 import { anchorLabReport } from './workers/anchor-lab-report.worker.ts'
 import { anchorPrescription } from './workers/anchor-prescription.worker.ts'
 
@@ -15,8 +14,6 @@ const worker = new Worker(
         return anchorPrescription(job)
       case 'anchor-lab-report':
         return anchorLabReport(job)
-      case 'anchor-fulfillment':
-        return anchorFulfillment(job)
       default:
         throw new Error(`Unknown blockchain job: ${job.name}`)
     }

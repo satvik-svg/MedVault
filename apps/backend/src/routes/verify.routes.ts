@@ -27,7 +27,7 @@ router.get('/prescription/:id', async (req, res) => {
         verified: !!doctor?.verification?.nmcVerified,
       },
       patientNameAndAge: patient ? `${patient.fullName}, ${computeAge(patient.dateOfBirth)}` : undefined,
-      medications: (prescription.medications || []).map((medication) => ({
+      medications: (prescription.medications || []).map((medication: any) => ({
         drug: medication.brandName || medication.genericName,
         strength: medication.strength,
         dosage: medication.dosage?.customInstructions || medication.dosage?.frequency,
@@ -64,7 +64,7 @@ router.get('/lab-report/:id', async (req, res) => {
         verified: lab?.trustLevel === 'VERIFIED',
       },
       patientNameAndAge: patient ? `${patient.fullName}, ${computeAge(patient.dateOfBirth)}` : undefined,
-      results: (labReport.results || []).map((result) => ({
+      results: (labReport.results || []).map((result: any) => ({
         testName: result.testName,
         loincCode: result.loincCode,
         value: result.value,

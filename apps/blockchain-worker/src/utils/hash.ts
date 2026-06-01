@@ -13,7 +13,6 @@ export function canonicalizePrescription(prescription: Record<string, any>): str
     prescriptionNumber: prescription.prescriptionNumber || '',
     patientId: String(prescription.patientId || ''),
     doctorId: String(prescription.doctorId || ''),
-    clinicId: String(prescription.clinicId || ''),
     createdAt: new Date(prescription.createdAt).toISOString(),
     diagnosis: (prescription.diagnosis || [])
       .map((diagnosis: Record<string, any>) => ({ icd10: diagnosis.icd10Code, primary: !!diagnosis.isPrimary }))

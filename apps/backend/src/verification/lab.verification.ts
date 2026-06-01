@@ -1,4 +1,3 @@
-import mongoose from 'mongoose'
 import { Lab } from '../models/Lab.ts'
 import { User } from '../models/User.ts'
 import { sendWhatsApp } from '../services/notification.service.ts'
@@ -8,7 +7,7 @@ export async function approveLabManually(labId: string, reviewedBy: string, note
   if (!lab) throw new Error('Lab not found')
 
   lab.verification.manualReviewStatus = 'APPROVED'
-  lab.verification.reviewedBy = new mongoose.Types.ObjectId(reviewedBy) as any
+  lab.verification.reviewedBy = reviewedBy
   lab.verification.reviewedAt = new Date()
   lab.verification.reviewNotes = notes
   lab.trustLevel = 'VERIFIED'
@@ -25,7 +24,7 @@ export async function rejectLabManually(labId: string, reviewedBy: string, reaso
   if (!lab) throw new Error('Lab not found')
 
   lab.verification.manualReviewStatus = 'REJECTED'
-  lab.verification.reviewedBy = new mongoose.Types.ObjectId(reviewedBy) as any
+  lab.verification.reviewedBy = reviewedBy
   lab.verification.reviewedAt = new Date()
   lab.verification.reviewNotes = reason
   lab.trustLevel = 'REJECTED'

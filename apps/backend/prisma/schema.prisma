@@ -8,18 +8,26 @@ datasource db {
 }
 
 model User {
-  id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  phoneNumber        String?  @unique @map("phone_number")
-  email              String?  @unique
-  passwordHash       String?  @map("password_hash")
-  role               String
-  patientId          String?  @map("patient_id") @db.Uuid
-  doctorId           String?  @map("doctor_id") @db.Uuid
-  labId              String?  @map("lab_id") @db.Uuid
-  isActive           Boolean  @default(true) @map("is_active")
-  mustChangePassword Boolean  @default(false) @map("must_change_password")
-  createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt          DateTime @default(now()) @map("updated_at") @db.Timestamptz
+  id                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  phoneNumber         String?   @unique @map("phone_number")
+  email               String?   @unique
+  passwordHash        String?   @map("password_hash")
+  role                String
+  patientId           String?   @map("patient_id") @db.Uuid
+  doctorId            String?   @map("doctor_id") @db.Uuid
+  labId               String?   @map("lab_id") @db.Uuid
+  mustChangePassword  Boolean   @default(false) @map("must_change_password")
+  isPhoneVerified     Boolean   @default(false) @map("is_phone_verified")
+  isEmailVerified     Boolean   @default(false) @map("is_email_verified")
+  isActive            Boolean   @default(true) @map("is_active")
+  isLocked            Boolean   @default(false) @map("is_locked")
+  lastLoginAt         DateTime? @map("last_login_at") @db.Timestamptz
+  failedLoginAttempts Int       @default(0) @map("failed_login_attempts")
+  twoFactorEnabled    Boolean   @default(false) @map("two_factor_enabled")
+  twoFactorSecret     String?   @map("two_factor_secret")
+  deletedAt           DateTime? @map("deleted_at") @db.Timestamptz
+  createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt           DateTime  @default(now()) @map("updated_at") @db.Timestamptz
 
   patient Patient?
   doctor  Doctor?
@@ -28,177 +36,249 @@ model User {
 }
 
 model Patient {
-  id                String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId            String?     @unique @map("user_id") @db.Uuid
-  medvaultId        String      @unique @map("medvault_id")
-  abhaId            String?     @unique @map("abha_id")
-  abhaAddress       String?     @map("abha_address")
-  fullName          String      @map("full_name")
-  dateOfBirth       DateTime    @map("date_of_birth") @db.Date
+  id                String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId            String?   @unique @map("user_id") @db.Uuid
+  medvaultId        String    @unique @map("medvault_id")
+  abhaId            String?   @unique @map("abha_id")
+  abhaAddress       String?   @map("abha_address")
+  fullName          String    @map("full_name")
+  dateOfBirth       DateTime  @map("date_of_birth") @db.Date
   sex               String
-  bloodGroup        String?     @map("blood_group")
-  contact           Json        @default("{}")
-  allergies         Json        @default("[]")
-  chronicConditions Json        @default("[]") @map("chronic_conditions")
-  activeMedications Json        @default("[]") @map("active_medications")
-  onboarding        Json        @default("{}")
-  stats             Json        @default("{}")
-  deletedAt         DateTime?   @map("deleted_at") @db.Timestamptz
-  createdAt         DateTime    @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt         DateTime    @default(now()) @map("updated_at") @db.Timestamptz
+  bloodGroup        String?   @map("blood_group")
+  contact           Json      @default("{}")
+  allergies         Json      @default("[]")
+  chronicConditions Json      @default("[]") @map("chronic_conditions")
+  activeMedications Json      @default("[]") @map("active_medications")
+  emergencyContact  Json      @default("{}") @map("emergency_contact")
+  onboarding        Json      @default("{}")
+  stats             Json      @default("{}")
+  deletedAt         DateTime? @map("deleted_at") @db.Timestamptz
+  createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt         DateTime  @default(now()) @map("updated_at") @db.Timestamptz
 
-  user          User?          @relation(fields: [userId], references: [id])
-  visits        Visit[]
-  prescriptions Prescription[]
-  labOrders     LabOrder[]
-  labReports    LabReport[]
+  user User? @relation(fields: [userId], references: [id])
 
   @@map("patients")
 }
 
 model Doctor {
-  id                  String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId              String?  @unique @map("user_id") @db.Uuid
-  fullName            String   @map("full_name")
-  nmcRegNumber        String   @unique @map("nmc_reg_number")
-  stateMedicalCouncil String?  @map("state_medical_council")
-  specializations     Json     @default("[]")
-  qualifications      Json     @default("[]")
-  practice            Json     @default("{}")
-  verification        Json     @default("{}")
-  trustLevel          String   @default("PENDING") @map("trust_level")
-  createdAt           DateTime @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt           DateTime @default(now()) @map("updated_at") @db.Timestamptz
+  id                   String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId               String?   @unique @map("user_id") @db.Uuid
+  fullName             String    @map("full_name")
+  photoUrl             String?   @map("photo_url")
+  nmcRegNumber         String    @unique @map("nmc_reg_number")
+  stateMedicalCouncil  String?   @map("state_medical_council")
+  hprId                String?   @map("hpr_id")
+  specializations      Json      @default("[]")
+  qualifications       Json      @default("[]")
+  languages            Json      @default("[]")
+  yearsExperience      Int?      @map("years_experience")
+  practice             Json      @default("{}")
+  hospitalAffiliations Json      @default("[]") @map("hospital_affiliations")
+  verification         Json      @default("{}")
+  onboarding           Json      @default("{}")
+  preferredLabIds      String[]  @default([]) @map("preferred_lab_ids") @db.Uuid
+  trustLevel           String    @default("PENDING") @map("trust_level")
+  stats                Json      @default("{}")
+  isActive             Boolean   @default(true) @map("is_active")
+  deletedAt            DateTime? @map("deleted_at") @db.Timestamptz
+  createdAt            DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt            DateTime  @default(now()) @map("updated_at") @db.Timestamptz
 
-  user          User?          @relation(fields: [userId], references: [id])
-  visits        Visit[]
-  prescriptions Prescription[]
-  labOrders     LabOrder[]
-  labReports    LabReport[]
+  user User? @relation(fields: [userId], references: [id])
 
   @@map("doctors")
 }
 
 model Lab {
-  id                      String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  legalName               String?     @map("legal_name")
-  displayName             String      @map("display_name")
+  id                      String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  legalName               String?   @map("legal_name")
+  displayName             String    @map("display_name")
   phone                   String?
   email                   String?
-  gstin                   String?     @unique
-  nablAccreditationNumber String?     @map("nabl_accreditation_number")
-  address                 Json        @default("{}")
-  testsOffered            Json        @default("[]") @map("tests_offered")
-  trustLevel              String      @default("PENDING") @map("trust_level")
-  isActive                Boolean     @default(true) @map("is_active")
-  verification            Json        @default("{}")
-  createdAt               DateTime    @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt               DateTime    @default(now()) @map("updated_at") @db.Timestamptz
-
-  labOrders  LabOrder[]
-  labReports LabReport[]
+  website                 String?
+  logoUrl                 String?   @map("logo_url")
+  gstin                   String?   @unique
+  nablAccreditationNumber String?   @map("nabl_accreditation_number")
+  tradeLicenseUrl         String?   @map("trade_license_url")
+  premisesPhotoUrl        String?   @map("premises_photo_url")
+  address                 Json      @default("{}")
+  operatingHours          Json      @default("[]") @map("operating_hours")
+  sampleCollectionHours   Json      @default("[]") @map("sample_collection_hours")
+  holidayDates            Json      @default("[]") @map("holiday_dates")
+  homeCollectionAvailable Boolean   @default(false) @map("home_collection_available")
+  homeCollectionCharge    Float?    @map("home_collection_charge")
+  homeCollectionCities    Json      @default("[]") @map("home_collection_cities")
+  testsOffered            Json      @default("[]") @map("tests_offered")
+  operatorUserIds         String[]  @default([]) @map("operator_user_ids") @db.Uuid
+  verification            Json      @default("{}")
+  trustLevel              String    @default("PENDING") @map("trust_level")
+  onboarding              Json      @default("{}")
+  stats                   Json      @default("{}")
+  commercial              Json      @default("{}")
+  isActive                Boolean   @default(true) @map("is_active")
+  deletedAt               DateTime? @map("deleted_at") @db.Timestamptz
+  createdAt               DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt               DateTime  @default(now()) @map("updated_at") @db.Timestamptz
 
   @@map("labs")
 }
 
 model Visit {
-  id                String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  patientId         String      @map("patient_id") @db.Uuid
-  doctorId          String?     @map("doctor_id") @db.Uuid
-  startedAt         DateTime    @default(now()) @map("started_at") @db.Timestamptz
-  endedAt           DateTime?   @map("ended_at") @db.Timestamptz
-  status            String      @default("CHECKED_IN")
-  type              String      @default("WALK_IN")
-  chiefComplaint    String?     @map("chief_complaint")
-  preVisitSymptoms  Json        @default("{}") @map("pre_visit_symptoms")
-  doctorNotes       String?     @map("doctor_notes")
-  prescriptionId    String?     @map("prescription_id") @db.Uuid
-  labOrderIds       String[]    @default([]) @map("lab_order_ids") @db.Uuid
-  createdBy         String?     @map("created_by") @db.Uuid
-  createdAt         DateTime    @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt         DateTime    @default(now()) @map("updated_at") @db.Timestamptz
-
-  patient       Patient        @relation(fields: [patientId], references: [id])
-  doctor        Doctor?        @relation(fields: [doctorId], references: [id])
-  prescriptions Prescription[]
-  labOrders     LabOrder[]
+  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  patientId        String    @map("patient_id") @db.Uuid
+  doctorId         String?   @map("doctor_id") @db.Uuid
+  startedAt        DateTime  @default(now()) @map("started_at") @db.Timestamptz
+  endedAt          DateTime? @map("ended_at") @db.Timestamptz
+  status           String    @default("CHECKED_IN")
+  type             String    @default("WALK_IN")
+  chiefComplaint   String?   @map("chief_complaint")
+  preVisitSymptoms Json      @default("{}") @map("pre_visit_symptoms")
+  doctorNotes      String?   @map("doctor_notes")
+  prescriptionId   String?   @map("prescription_id") @db.Uuid
+  labOrderIds      String[]  @default([]) @map("lab_order_ids") @db.Uuid
+  consultationFee  Float?    @map("consultation_fee")
+  paymentStatus    String?   @map("payment_status")
+  paymentMethod    String?   @map("payment_method")
+  createdBy        String?   @map("created_by") @db.Uuid
+  cancelledAt      DateTime? @map("cancelled_at") @db.Timestamptz
+  cancelReason     String?   @map("cancel_reason")
+  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt        DateTime  @default(now()) @map("updated_at") @db.Timestamptz
 
   @@map("visits")
 }
 
 model Prescription {
-  id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  prescriptionNumber String?  @unique @map("prescription_number")
-  patientId          String   @map("patient_id") @db.Uuid
-  doctorId           String?  @map("doctor_id") @db.Uuid
-  visitId            String?  @map("visit_id") @db.Uuid
-  diagnosis          Json     @default("[]")
-  medications        Json     @default("[]")
-  labOrders          Json     @default("[]") @map("lab_orders")
-  blockchain         Json     @default("{\"status\":\"NOT_QUEUED\"}")
-  blockchainTxHash   String?  @map("blockchain_tx_hash")
+  id                 String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  patientId          String    @map("patient_id") @db.Uuid
+  doctorId           String?   @map("doctor_id") @db.Uuid
+  visitId            String?   @map("visit_id") @db.Uuid
+  prescriptionNumber String?   @unique @map("prescription_number")
+  source             String    @default("MEDVAULT_NATIVE")
+  status             String    @default("ISSUED")
+  diagnosis          Json      @default("[]")
+  medications        Json      @default("[]")
+  drugs              Json      @default("[]")
+  diagnosisText      String?   @map("diagnosis_text")
+  notes              String?
+  labOrders          Json      @default("[]") @map("lab_orders")
+  followUp           Json      @default("{}") @map("follow_up")
+  pdfUrl             String?   @map("pdf_url")
+  verificationQR     Json      @default("{}") @map("verification_qr")
+  blockchain         Json      @default("{\"status\":\"NOT_QUEUED\"}")
+  aiAssistance       Json      @default("{}") @map("ai_assistance")
+  validUntil         DateTime? @map("valid_until") @db.Timestamptz
+  isExpired          Boolean   @default(false) @map("is_expired")
+  externalUpload     Json      @default("{}") @map("external_upload")
+  attachmentUrls     Json      @default("[]") @map("attachment_urls")
+  blockchainTxHash   String?   @map("blockchain_tx_hash")
   issuedAt           DateTime? @map("issued_at") @db.Timestamptz
-  createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt          DateTime @default(now()) @map("updated_at") @db.Timestamptz
-
-  patient Patient @relation(fields: [patientId], references: [id])
-  doctor  Doctor? @relation(fields: [doctorId], references: [id])
-  visit   Visit?  @relation(fields: [visitId], references: [id])
+  expiresAt          DateTime? @map("expires_at") @db.Timestamptz
+  deletedAt          DateTime? @map("deleted_at") @db.Timestamptz
+  voidedAt           DateTime? @map("voided_at") @db.Timestamptz
+  voidReason         String?   @map("void_reason")
+  createdAt          DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt          DateTime  @default(now()) @map("updated_at") @db.Timestamptz
 
   @@map("prescriptions")
 }
 
 model LabOrder {
-  id                  String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  orderNumber         String?  @unique @map("order_number")
-  patientId           String   @map("patient_id") @db.Uuid
-  doctorId            String?  @map("doctor_id") @db.Uuid
-  visitId             String?  @map("visit_id") @db.Uuid
-  labId               String?  @map("lab_id") @db.Uuid
-  tests               Json     @default("[]")
-  status              String   @default("CREATED")
-  statusHistory       Json     @default("[]") @map("status_history")
-  totalEstimatedPrice Decimal? @map("total_estimated_price") @db.Decimal(12, 2)
-  labReportId         String?  @map("lab_report_id") @db.Uuid
-  createdAt           DateTime @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt           DateTime @default(now()) @map("updated_at") @db.Timestamptz
-
-  patient Patient @relation(fields: [patientId], references: [id])
-  doctor  Doctor? @relation(fields: [doctorId], references: [id])
-  visit   Visit?  @relation(fields: [visitId], references: [id])
-  lab     Lab?    @relation(fields: [labId], references: [id])
+  id                       String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  patientId                String    @map("patient_id") @db.Uuid
+  doctorId                 String?   @map("doctor_id") @db.Uuid
+  visitId                  String?   @map("visit_id") @db.Uuid
+  prescriptionId           String?   @map("prescription_id") @db.Uuid
+  labId                    String?   @map("lab_id") @db.Uuid
+  orderNumber              String?   @unique @map("order_number")
+  tests                    Json      @default("[]")
+  totalEstimatedPrice      Float?    @map("total_estimated_price")
+  homeCollectionRequested  Boolean   @default(false) @map("home_collection_requested")
+  homeCollectionAddress    String?   @map("home_collection_address")
+  preferredCollectionTime  DateTime? @map("preferred_collection_time") @db.Timestamptz
+  status                   String    @default("CREATED")
+  statusHistory            Json      @default("[]") @map("status_history")
+  labReportId              String?   @map("lab_report_id") @db.Uuid
+  patientWentToAlternateLab Boolean  @default(false) @map("patient_went_to_alternate_lab")
+  alternateLabName         String?   @map("alternate_lab_name")
+  commercial               Json      @default("{}")
+  expiresAt                DateTime? @map("expires_at") @db.Timestamptz
+  createdAt                DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt                DateTime  @default(now()) @map("updated_at") @db.Timestamptz
 
   @@map("lab_orders")
 }
 
 model LabReport {
-  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  reportNumber      String?  @unique @map("report_number")
-  patientId         String   @map("patient_id") @db.Uuid
-  labId             String?  @map("lab_id") @db.Uuid
-  labOrderId        String?  @map("lab_order_id") @db.Uuid
-  orderedByDoctorId String?  @map("ordered_by_doctor_id") @db.Uuid
-  source            String   @default("MEDVAULT_NATIVE_LAB_PARTNER")
-  fileUrl           String?  @map("file_url")
-  fileType          String?  @map("file_type")
-  collectionDate    DateTime? @map("collection_date") @db.Timestamptz
-  reportDate        DateTime @default(now()) @map("report_date") @db.Timestamptz
-  results           Json     @default("[]")
-  hasAbnormalValues Boolean  @default(false) @map("has_abnormal_values")
-  hasCriticalValues Boolean  @default(false) @map("has_critical_values")
-  structuredData    Json?    @map("structured_data")
-  aiConfidence      Decimal? @map("ai_confidence") @db.Decimal(5, 4)
-  isVerified        Boolean  @default(false) @map("is_verified")
-  blockchain        Json     @default("{\"status\":\"NOT_QUEUED\"}")
-  blockchainTxHash  String?  @map("blockchain_tx_hash")
-  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt         DateTime @default(now()) @map("updated_at") @db.Timestamptz
-
-  patient Patient @relation(fields: [patientId], references: [id])
-  lab     Lab?    @relation(fields: [labId], references: [id])
-  doctor  Doctor? @relation(fields: [orderedByDoctorId], references: [id])
+  id                       String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  patientId                String    @map("patient_id") @db.Uuid
+  uploadedByUserId         String?   @map("uploaded_by_user_id") @db.Uuid
+  labId                    String?   @map("lab_id") @db.Uuid
+  labOrderId               String?   @map("lab_order_id") @db.Uuid
+  uploadedByOperatorUserId String?   @map("uploaded_by_operator_user_id") @db.Uuid
+  orderedByDoctorId        String?   @map("ordered_by_doctor_id") @db.Uuid
+  prescriptionId           String?   @map("prescription_id") @db.Uuid
+  reportNumber             String?   @unique @map("report_number")
+  source                   String    @default("MEDVAULT_NATIVE_LAB_PARTNER")
+  fileUrl                  String?   @map("file_url")
+  fileType                 String?   @map("file_type")
+  collectionDate           DateTime? @map("collection_date") @db.Timestamptz
+  reportDate               DateTime  @default(now()) @map("report_date") @db.Timestamptz
+  category                 String?
+  results                  Json      @default("[]")
+  hasAbnormalValues        Boolean   @default(false) @map("has_abnormal_values")
+  hasCriticalValues        Boolean   @default(false) @map("has_critical_values")
+  attachmentUrls           Json      @default("[]") @map("attachment_urls")
+  ocrText                  String?   @map("ocr_text")
+  structuredData           Json?     @map("structured_data")
+  aiConfidence             Float?    @map("ai_confidence")
+  isVerified               Boolean   @default(false) @map("is_verified")
+  verifiedBy               String?   @map("verified_by") @db.Uuid
+  externalUpload           Json      @default("{}") @map("external_upload")
+  blockchain               Json      @default("{\"status\":\"NOT_QUEUED\"}")
+  blockchainTxHash         String?   @map("blockchain_tx_hash")
+  deletedAt                DateTime? @map("deleted_at") @db.Timestamptz
+  createdAt                DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt                DateTime  @default(now()) @map("updated_at") @db.Timestamptz
 
   @@map("lab_reports")
+}
+
+model Consent {
+  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  patientId      String    @map("patient_id") @db.Uuid
+  granteeUserId  String    @map("grantee_user_id") @db.Uuid
+  granteeType    String    @map("grantee_type")
+  scope          Json      @default("[]")
+  grantedAt      DateTime  @default(now()) @map("granted_at") @db.Timestamptz
+  expiresAt      DateTime  @map("expires_at") @db.Timestamptz
+  status         String    @default("ACTIVE")
+  grantMethod    String?   @map("grant_method")
+  revokedAt      DateTime? @map("revoked_at") @db.Timestamptz
+  revokedReason  String?   @map("revoked_reason")
+  nonce          String    @unique
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime  @default(now()) @map("updated_at") @db.Timestamptz
+
+  @@map("consents")
+}
+
+model ConsentRequest {
+  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  patientId      String    @map("patient_id") @db.Uuid
+  granteeUserId  String    @map("grantee_user_id") @db.Uuid
+  granteeType    String    @map("grantee_type")
+  scope          Json      @default("[]")
+  purpose        String    @default("OTHER")
+  status         String    @default("PENDING")
+  expiresAt      DateTime  @map("expires_at") @db.Timestamptz
+  resolvedAt     DateTime? @map("resolved_at") @db.Timestamptz
+  nonce          String    @unique
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime  @default(now()) @map("updated_at") @db.Timestamptz
+
+  @@map("consent_requests")
 }
 
 model AccessLog {
@@ -209,6 +289,11 @@ model AccessLog {
   targetType  String?  @map("target_type")
   targetId    String?  @map("target_id") @db.Uuid
   patientId   String?  @map("patient_id") @db.Uuid
+  consentId   String?  @map("consent_id") @db.Uuid
+  ip          String?
+  userAgent   String?  @map("user_agent")
+  geoCountry  String?  @map("geo_country")
+  geoCity     String?  @map("geo_city")
   metadata    Json     @default("{}")
   createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
 
@@ -216,26 +301,36 @@ model AccessLog {
 }
 
 model RefDrug {
-  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  rxnormCui        String?  @unique @map("rxnorm_cui")
-  genericName      String   @map("generic_name")
-  brandNames       Json     @default("[]") @map("brand_names")
-  indianBrandNames Json     @default("[]") @map("indian_brand_names")
-  drugClass        String?  @map("drug_class")
-  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz
+  id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  rxnormCui          String?  @unique @map("rxnorm_cui")
+  genericName        String   @map("generic_name")
+  brandNames         Json     @default("[]") @map("brand_names")
+  indianBrandNames   Json     @default("[]") @map("indian_brand_names")
+  drugClass          String?  @map("drug_class")
+  atcCode            String?  @map("atc_code")
+  commonStrengths    Json     @default("[]") @map("common_strengths")
+  forms              Json     @default("[]")
+  routes             Json     @default("[]")
+  pregnancyCategory  String?  @map("pregnancy_category")
+  renalDoseAdjust    Json     @default("{}") @map("renal_dose_adjust")
+  hepaticDoseAdjust  Json     @default("{}") @map("hepatic_dose_adjust")
+  interactingClasses Json     @default("[]") @map("interacting_classes")
+  createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz
 
   @@map("ref_drugs")
 }
 
 model RefInteraction {
   id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  drugACui       String   @map("drug_a_cui")
-  drugBCui       String   @map("drug_b_cui")
+  drug1Cui       String   @map("drug_a_cui")
+  drug2Cui       String   @map("drug_b_cui")
   severity       String
+  mechanism      String?
   clinicalEffect String?  @map("clinical_effect")
   management     String?
+  source         String   @default("CURATED")
   createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
 
-  @@unique([drugACui, drugBCui])
+  @@unique([drug1Cui, drug2Cui])
   @@map("ref_interactions")
 }

@@ -82,7 +82,7 @@ function HeroSection() {
           <h1 className="hero__title">Smart Health,<br /><span className="hero__title-accent">Safer Care</span></h1>
           <p className="hero__subtitle">AI-powered drug interaction detection, blockchain-verified prescriptions, and seamless patient-doctor connectivity through ABHA ID.</p>
           <div className="hero__actions">
-            <Link to="/register" className="btn btn-primary btn-lg" id="hero-cta"><Calendar size={18} />Make Appointment</Link>
+            <Link to="/register" className="btn btn-primary btn-lg" id="hero-cta"><Calendar size={18} />Start Visit</Link>
             <a href="#how-it-works" className="btn btn-outline btn-lg">Learn More<ArrowRight size={18} /></a>
           </div>
           <div className="hero__trust">
@@ -122,7 +122,7 @@ function HeroSection() {
 function QuickAccess() {
   const items = [
     { icon: <FlaskConical size={28} />, title: 'Lab Network', desc: 'Order tests through verified partner labs and track reports', color: '#0f766e', bg: '#ecfdf5' },
-    { icon: <Calendar size={28} />, title: 'Book Appointment', desc: 'Schedule with verified doctors across specialties', color: 'var(--color-primary-600)', bg: 'var(--color-primary-50)' },
+    { icon: <Calendar size={28} />, title: 'Walk-in Visit', desc: 'Check in quickly and let doctors open the right health context', color: 'var(--color-primary-600)', bg: 'var(--color-primary-50)' },
     { icon: <Search size={28} />, title: 'Find Doctor', desc: 'Search by specialty, location, or availability', color: 'var(--color-secondary-600)', bg: '#eff6ff' },
   ]
   return (
@@ -215,7 +215,7 @@ function Doctors() {
                   <span className={`badge ${doc.available ? 'badge-safe' : 'badge-teal'}`}>{doc.available ? 'Available' : 'Unavailable'}</span>
                 </div>
               </div>
-              <button className="btn btn-outline btn-sm">Appointment</button>
+              <button className="btn btn-outline btn-sm">View Doctor</button>
             </motion.div>
           ))}
         </div>
