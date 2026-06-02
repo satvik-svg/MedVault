@@ -92,25 +92,15 @@ pnpm --filter @medvault/backend seed:references
 
 ## Running Locally
 
-Start everything from the repo root:
+Run the local stack from the repository root. The recommended workflow is to keep the frontend in its own terminal and run backend-side services separately.
+
+Frontend:
 
 ```bash
-pnpm dev
+node scripts/dev-web.mjs
 ```
 
-This runs backend, frontend, ABDM mock, blockchain worker, and AI service together with prefixed logs. Stop all services with `Ctrl+C`.
-
-Optional skips:
-
-```bash
-pnpm dev -- --no-ai
-pnpm dev -- --no-worker
-pnpm dev -- --no-mock
-```
-
-Or start services in separate terminals.
-
-From the repo root, use the commands below exactly. If your terminal is already inside a package folder like `apps/backend`, either run the local script (`pnpm dev`) or add `-w` to run the root workspace script (`pnpm -w dev:backend`).
+Default URL: `http://127.0.0.1:3000/`
 
 Backend API:
 
@@ -120,23 +110,13 @@ pnpm dev:backend
 
 Default URL: `http://localhost:4000`
 
-Frontend:
-
-```bash
-pnpm dev:frontend
-```
-
-Default URL: Vite prints it, usually `http://localhost:5173`
-
 AI service:
 
 ```bash
-cd apps/ai-service
-python3.11 -m venv .venv
-source .venv/bin/activate
-pip install -e .
-uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
+pnpm dev:ai
 ```
+
+Default URL: `http://localhost:8000`
 
 ABDM mock:
 
@@ -152,10 +132,22 @@ Blockchain worker:
 pnpm dev:blockchain-worker
 ```
 
+Backend-side services can also be started together without the frontend:
+
+```bash
+pnpm dev:services
+```
+
 Local Redis with Docker, if not using Upstash:
 
 ```bash
 docker compose up -d
+```
+
+If your terminal is inside a package folder like `apps/backend`, either run the package-local script (`pnpm dev`) or add `-w` to run a root workspace script, for example:
+
+```bash
+pnpm -w dev:backend
 ```
 
 ## Service Health Checks
@@ -168,7 +160,7 @@ curl http://localhost:4000/api/health
 
 Frontend:
 
-Open the Vite URL in your browser.
+Open `http://127.0.0.1:3000/` in your browser.
 
 AI service:
 
@@ -244,7 +236,7 @@ python3.11 -m compileall -q apps/ai-service/src apps/ai-service/evaluation apps/
 3. Run `pnpm --filter @medvault/backend prisma:generate`.
 4. Run `pnpm --filter @medvault/backend db:init:neon`.
 5. Start backend with `pnpm dev:backend`.
-6. Start frontend with `pnpm dev:frontend`.
+6. Start frontend with `node scripts/dev-web.mjs`.
 7. Start AI service if testing AI endpoints.
 8. Start blockchain worker if testing anchoring jobs.
 
