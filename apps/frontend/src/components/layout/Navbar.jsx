@@ -28,9 +28,7 @@ export default function Navbar() {
     <nav className={`navbar ${scrolled ? 'navbar--scrolled' : ''}`} id="navbar">
       <div className="navbar__inner container">
         <Link to="/" className="navbar__logo" id="logo-link">
-          <div className="navbar__logo-icon">
-            <Shield size={28} />
-          </div>
+          <img src="/logo-removebg-preview.png" alt="MedVault Logo" style={{ width: 36, height: 36, objectFit: 'contain' }} />
           <span className="navbar__logo-text">MedVault</span>
         </Link>
 

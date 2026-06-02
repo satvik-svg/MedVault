@@ -98,7 +98,7 @@
 }
 
 .sidebar__item--active {
-  background: rgba(0, 181, 181, 0.15);
+  background: rgba(59, 130, 246, 0.15);
   color: var(--color-primary-400);
 }
 

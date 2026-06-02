@@ -10,6 +10,7 @@ import { listPatientLabReports } from '../services/lab.service.ts'
 import { listPatientLabOrders, markPatientUsingAlternateLab } from '../services/lab-order.service.ts'
 import { resolveConsentRequest } from '../services/consent.service.ts'
 import { recordPreVisitSymptoms } from '../services/visit.service.ts'
+import { signPayload, toQrDataUrl } from '../utils/qr.ts'
 import { computeAge } from '../utils/time.ts'
 
 const router: RouterType = Router()
@@ -20,6 +21,38 @@ router.get('/profile', getProfile)
 router.post('/profile', updateProfile)
 router.get('/me', getProfile)
 router.patch('/me', updateProfile)
+
+router.get('/me/qr', requireRole('PATIENT'), async (req, res) => {
+  try {
+    if (!req.user?.patientId) throw new Error('Patient profile is required')
+
+    const patient = await Patient.findById(req.user.patientId).select('_id medvaultId abhaId fullName').lean()
+    if (!patient) throw new Error('Patient not found')
+
+    const { signedPayload, payload } = signPayload({
+      type: 'PATIENT_ACCESS',
+      patientId: patient._id.toString(),
+      medvaultId: patient.medvaultId,
+      abhaId: patient.abhaId,
+    }, 10 * 60)
+    const uri = `medvault://patient-access?token=${encodeURIComponent(signedPayload)}`
+
+    res.json({
+      token: signedPayload,
+      uri,
+      qrDataUrl: await toQrDataUrl(uri, patient.medvaultId || 'MedVault Patient'),
+      expiresAt: new Date(payload.exp * 1000).toISOString(),
+      patient: {
+        id: patient._id,
+        medvaultId: patient.medvaultId,
+        abhaId: patient.abhaId,
+        fullName: patient.fullName,
+      },
+    })
+  } catch (error) {
+    res.status(400).json({ error: error instanceof Error ? error.message : 'Failed to generate patient QR' })
+  }
+})
 
 router.get('/prescriptions', async (req, res) => {
   try {

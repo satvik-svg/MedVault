@@ -5,7 +5,6 @@ import { resolve } from 'node:path'
 const root = resolve(new URL('..', import.meta.url).pathname)
 const args = new Set(process.argv.slice(2))
 const backendRoot = resolve(root, 'apps/backend')
-const frontendRoot = resolve(root, 'apps/frontend')
 const abdmMockRoot = resolve(root, 'apps/abdm-mock')
 const blockchainWorkerRoot = resolve(root, 'apps/blockchain-worker')
 const aiServiceRoot = resolve(root, 'apps/ai-service')
@@ -40,10 +39,9 @@ const services = [
   {
     name: 'frontend',
     enabled: !args.has('--no-frontend'),
-    command: resolve(frontendRoot, 'node_modules/.bin/vite'),
-    args: [],
-    cwd: frontendRoot,
-    env: { CI: 'true' },
+    command: process.execPath,
+    args: [resolve(root, 'scripts/dev-web.mjs')],
+    cwd: root,
     inheritStdin: true,
   },
   {

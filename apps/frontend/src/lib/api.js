@@ -67,10 +67,20 @@ const readError = async (res) => {
   }
 }
 
+const storeSession = ({ accessToken, refreshToken, user }) => {
+  if (accessToken) localStorage.setItem('medvault_token', accessToken)
+  if (refreshToken) localStorage.setItem('medvault_refresh_token', refreshToken)
+  if (user) localStorage.setItem('medvault_user', JSON.stringify(user))
+}
+
 export const authApi = {
-  login: (email, password) => api.post('/auth/login', { email, password }),
+  login: async (email, password) => {
+    const session = await api.post('/auth/login', { email, password })
+    storeSession(session)
+    return session
+  },
   register: (data) => api.post('/auth/register', data),
-  logout: () => api.post('/auth/logout', {}),
+  logout: () => api.post('/auth/logout', { refreshToken: localStorage.getItem('medvault_refresh_token') }),
   me: () => api.get('/auth/me'),
 }
 
@@ -83,6 +93,7 @@ export const patientApi = {
   activeMedications: () => api.get('/patient/prescriptions/active'),
   labReports: () => api.get('/patient/lab-reports'),
   labOrders: () => api.get('/patient/me/lab-orders'),
+  qr: () => api.get('/patient/me/qr'),
   quickView: (patientId) => api.get(`/patient/${patientId}/quick-view`),
   recordPreVisitSymptoms: (data) => api.post('/patient/me/pre-visit-symptoms', data),
 }

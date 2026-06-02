@@ -4,17 +4,17 @@
 
 /* ---- CSS Custom Properties / Design Tokens ---- */
 :root {
-  /* Primary — Teal / Clinical Trust */
-  --color-primary-50:  #e6f7f7;
-  --color-primary-100: #b3e8e8;
-  --color-primary-200: #80d9d9;
-  --color-primary-300: #4dcaca;
-  --color-primary-400: #26bfbf;
-  --color-primary-500: #00b5b5;
-  --color-primary-600: #009999;
-  --color-primary-700: #007d7d;
-  --color-primary-800: #006161;
-  --color-primary-900: #004545;
+  /* Primary — Deep Blue / Trust */
+  --color-primary-50:  #eff6ff;
+  --color-primary-100: #dbeafe;
+  --color-primary-200: #bfdbfe;
+  --color-primary-300: #93c5fd;
+  --color-primary-400: #60a5fa;
+  --color-primary-500: #3b82f6;
+  --color-primary-600: #2563eb;
+  --color-primary-700: #1d4ed8;
+  --color-primary-800: #1e40af;
+  --color-primary-900: #1e3a8a;
 
   /* Secondary — Sky Blue */
   --color-secondary-400: #38bdf8;
@@ -39,9 +39,16 @@
   --color-gray-800:  #1e293b;
   --color-gray-900:  #0f172a;
 
+  /* Navy */
+  --color-navy: #0a1628;
+  --color-navy-light: #162036;
+
   /* Blockchain / Trust accent */
   --color-gold:      #f59e0b;
   --color-gold-bg:   #fef3c7;
+
+  /* Gradients */
+  --color-primary-gradient: linear-gradient(135deg, #1e3a8a, #3b82f6);
 
   /* Surface */
   --surface-base:    #f0f9ff;
@@ -49,7 +56,7 @@
   --surface-overlay: rgba(255, 255, 255, 0.85);
 
   /* Typography */
-  --font-display: 'Instrument Serif', Georgia, serif;
+  --font-display: 'DM Serif Display', Georgia, serif;
   --font-body:    'Plus Jakarta Sans', system-ui, sans-serif;
   --font-mono:    'JetBrains Mono', 'Fira Code', monospace;
 
@@ -93,10 +100,12 @@
 
   /* Shadows */
   --shadow-sm:   0 1px 2px rgba(0,0,0,0.05);
-  --shadow-md:   0 4px 16px rgba(0, 181, 181, 0.10);
-  --shadow-lg:   0 12px 40px rgba(0, 181, 181, 0.15);
-  --shadow-card: 0 2px 12px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04);
-  --shadow-xl:   0 20px 60px rgba(0, 181, 181, 0.2);
+  --shadow-md:   0 4px 16px rgba(0, 0, 0, 0.08);
+  --shadow-lg:   0 12px 40px rgba(0, 0, 0, 0.10);
+  --shadow-card: 0 2px 12px rgba(0,0,0,0.04), 0 1px 3px rgba(0,0,0,0.02);
+  --shadow-xl:   0 20px 60px rgba(0, 0, 0, 0.12);
+  --shadow-glass: 0 8px 32px rgba(0, 0, 0, 0.06);
+  --shadow-hero: 0 25px 80px rgba(0, 0, 0, 0.12), 0 10px 30px rgba(0, 0, 0, 0.05);
 }
 
 /* ---- Global Reset & Base ---- */
@@ -171,6 +180,20 @@ ul, ol {
 .text-center { text-align: center; }
 .text-left   { text-align: left; }
 
+.text-gradient {
+  background: linear-gradient(135deg, var(--color-primary-500), var(--color-secondary-500));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.glass {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
 .flex { display: flex; }
 .flex-col { flex-direction: column; }
 .items-center { align-items: center; }
@@ -206,12 +229,12 @@ ul, ol {
 .btn-primary {
   background: var(--color-primary-500);
   color: white;
-  box-shadow: 0 4px 14px rgba(0, 181, 181, 0.3);
+  box-shadow: 0 4px 14px rgba(59, 130, 246, 0.3);
 }
 .btn-primary:hover {
   background: var(--color-primary-600);
-  transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(0, 181, 181, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4), 0 0 0 1px rgba(59, 130, 246, 0.1);
 }
 .btn-primary:active {
   transform: translateY(0);
@@ -234,7 +257,7 @@ ul, ol {
   background: var(--color-primary-500);
   color: white;
   transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(0, 181, 181, 0.4);
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
 }
 
 .btn-ghost {
@@ -335,6 +358,8 @@ ul, ol {
 }
 
 .form-input {
+  display: block;
+  width: 100%;
   padding: 10px 16px;
   border: 2px solid var(--color-gray-200);
   border-radius: var(--radius-md);
@@ -346,13 +371,15 @@ ul, ol {
 .form-input:focus {
   outline: none;
   border-color: var(--color-primary-500);
-  box-shadow: 0 0 0 3px rgba(0, 181, 181, 0.15);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
 }
 .form-input::placeholder {
   color: var(--color-gray-400);
 }
 
 .form-select {
+  display: block;
+  width: 100%;
   padding: 10px 16px;
   border: 2px solid var(--color-gray-200);
   border-radius: var(--radius-md);
@@ -370,7 +397,7 @@ ul, ol {
 .form-select:focus {
   outline: none;
   border-color: var(--color-primary-500);
-  box-shadow: 0 0 0 3px rgba(0, 181, 181, 0.15);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
 }
 
 /* ---- Keyframe Animations ---- */
@@ -436,9 +463,18 @@ ul, ol {
   to   { transform: rotate(360deg); }
 }
 
+.spin {
+  animation: spin 0.8s linear infinite;
+}
+
 @keyframes progressBar {
   from { width: 100%; }
   to   { width: 0%; }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position: 200% center; }
 }
 
 /* ---- Scrollbar Styles ---- */

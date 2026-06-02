@@ -9,9 +9,7 @@ export default function Footer() {
         <div className="footer__grid">
           <div className="footer__brand">
             <div className="footer__logo">
-              <div className="navbar__logo-icon">
-                <Shield size={24} />
-              </div>
+              <img src="/logo-removebg-preview.png" alt="MedVault Logo" style={{ width: 36, height: 36, objectFit: 'contain' }} />
               <span className="navbar__logo-text">MedVault</span>
             </div>
             <p className="footer__desc">

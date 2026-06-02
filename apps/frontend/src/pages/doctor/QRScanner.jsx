@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { Home, Camera, Edit, Users, BarChart2, QrCode, CheckCircle, Shield, User, ArrowRight } from 'lucide-react'
+import { Home, Camera, Edit, Users, BarChart2, CheckCircle, ArrowRight, Loader2 } from 'lucide-react'
+import toast from 'react-hot-toast'
 import Sidebar from '../../components/layout/Sidebar.jsx'
 import PageShell from '../../components/layout/PageShell.jsx'
+import { doctorApi } from '../../lib/api.js'
 import '../patient/Dashboard.css'
 
 const sidebarItems = [
@@ -16,6 +18,24 @@ const sidebarItems = [
 
 export default function QRScanner() {
   const [scanned, setScanned] = useState(false)
+  const [token, setToken] = useState('')
+  const [result, setResult] = useState(null)
+  const [loading, setLoading] = useState(false)
+
+  const handleScan = async () => {
+    setLoading(true)
+    try {
+      const payload = token.trim()
+      const response = await doctorApi.scanQR(payload)
+      setResult(response)
+      setScanned(true)
+      toast.success(response.decision?.startsWith('APPROVED') ? 'Access granted' : 'Consent request created')
+    } catch (error) {
+      toast.error(error.message || 'QR scan failed')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   return (
     <PageShell sidebar={<Sidebar items={sidebarItems} role="doctor" />}>
@@ -48,26 +68,28 @@ export default function QRScanner() {
             </div>
 
             {!scanned ? (
-              <button className="btn btn-primary btn-lg" onClick={() => setScanned(true)}>
-                <Camera size={18} /> Simulate Scan
+              <button className="btn btn-primary btn-lg" onClick={handleScan} disabled={loading || !token.trim()}>
+                {loading ? <Loader2 size={18} className="spin" /> : <Camera size={18} />}
+                {loading ? 'Scanning...' : 'Scan QR Token'}
               </button>
             ) : (
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} style={{ textAlign: 'left' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', marginBottom: 'var(--space-4)', justifyContent: 'center' }}>
-                  <span className="badge badge-safe" style={{ fontSize: 'var(--text-sm)', padding: '4px 12px' }}>✅ Verified via ABDM API + JWT</span>
+                  <span className="badge badge-safe" style={{ fontSize: 'var(--text-sm)', padding: '4px 12px' }}>Verified signed MedVault QR</span>
                 </div>
                 <div style={{ background: 'var(--color-gray-50)', borderRadius: 'var(--radius-lg)', padding: 'var(--space-5)' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', marginBottom: 'var(--space-4)' }}>
-                    <div className="dashboard__avatar" style={{ width: 48, height: 48 }}>RK</div>
-                    <div><strong>Ravi Kumar</strong><br /><span style={{ fontSize: 'var(--text-sm)', color: 'var(--color-gray-400)', fontFamily: 'var(--font-mono)' }}>ABHA: 14-1234-5678-9012</span></div>
+                    <div className="dashboard__avatar" style={{ width: 48, height: 48 }}>MV</div>
+                    <div>
+                      <strong>{result?.medvaultId || 'MedVault patient'}</strong><br />
+                      <span style={{ fontSize: 'var(--text-sm)', color: 'var(--color-gray-400)', fontFamily: 'var(--font-mono)' }}>Patient ID: {result?.patientId}</span>
+                    </div>
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-3)', fontSize: 'var(--text-sm)', marginBottom: 'var(--space-4)' }}>
-                    <div><span style={{ color: 'var(--color-gray-400)' }}>Age:</span> 34</div>
-                    <div><span style={{ color: 'var(--color-gray-400)' }}>Blood:</span> B+</div>
-                    <div><span style={{ color: 'var(--color-gray-400)' }}>Allergies:</span> <span className="badge badge-severe">Penicillin</span></div>
-                    <div><span style={{ color: 'var(--color-gray-400)' }}>Active Meds:</span> 3</div>
+                    <div><span style={{ color: 'var(--color-gray-400)' }}>Access:</span> {formatDecision(result?.decision)}</div>
+                    <div><span style={{ color: 'var(--color-gray-400)' }}>Consent:</span> {result?.consentId || result?.requestId || 'Pending'}</div>
                   </div>
-                  <Link to="/doctor/prescribe/1" className="btn btn-primary btn-md" style={{ width: '100%' }}>
+                  <Link to={`/doctor/prescribe/${result?.patientId}`} className="btn btn-primary btn-md" style={{ width: '100%' }}>
                     View Full Record & Prescribe <ArrowRight size={16} />
                   </Link>
                 </div>
@@ -77,7 +99,17 @@ export default function QRScanner() {
             <div style={{ marginTop: 'var(--space-6)', fontSize: 'var(--text-sm)', color: 'var(--color-gray-400)' }}>
               OR
               <div style={{ marginTop: 'var(--space-3)' }}>
-                <input className="form-input" placeholder="Enter ABHA ID manually" style={{ maxWidth: 300 }} />
+                <textarea
+                  className="form-input"
+                  placeholder="Paste signed QR token or enter MedVault / ABHA ID"
+                  style={{ maxWidth: 420, minHeight: 96 }}
+                  value={token}
+                  onChange={(event) => {
+                    setToken(event.target.value)
+                    setScanned(false)
+                    setResult(null)
+                  }}
+                />
               </div>
             </div>
           </motion.div>
@@ -85,4 +117,9 @@ export default function QRScanner() {
       </div>
     </PageShell>
   )
+}
+
+function formatDecision(decision) {
+  if (!decision) return 'Requested'
+  return decision.toLowerCase().replaceAll('_', ' ')
 }

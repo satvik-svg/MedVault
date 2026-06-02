@@ -19,9 +19,7 @@ export default function Sidebar({ items, role }) {
     >
       <div className="sidebar__header">
         <Link to="/" className="sidebar__logo">
-          <div className="sidebar__logo-icon">
-            <Shield size={20} />
-          </div>
+            <img src="/logo-removebg-preview.png" alt="MedVault Logo" style={{ width: 32, height: 32, objectFit: 'contain' }} />
           {!collapsed && <span className="sidebar__logo-text">MedVault</span>}
         </Link>
         <button

@@ -16,17 +16,37 @@ const sidebarItems = [
 
 export default function QRPage() {
   const [patient, setPatient] = useState(null)
+  const [qr, setQr] = useState(null)
   const [error, setError] = useState('')
 
   useEffect(() => {
     let alive = true
-    patientApi.profile()
-      .then((profile) => alive && setPatient(profile))
+    Promise.all([patientApi.profile(), patientApi.qr()])
+      .then(([profile, qrData]) => {
+        if (!alive) return
+        setPatient(profile)
+        setQr(qrData)
+      })
       .catch((err) => alive && setError(err.message))
     return () => { alive = false }
   }, [])
 
-  const qrPayload = patient?.medvaultId || patient?._id || 'MEDVAULT'
+  const qrPayload = qr?.patient?.medvaultId || patient?.medvaultId || patient?._id || 'MEDVAULT'
+  const handleDownload = () => {
+    if (!qr?.qrDataUrl) return
+    const link = document.createElement('a')
+    link.href = qr.qrDataUrl
+    link.download = `${qrPayload}-medvault-qr.svg`
+    link.click()
+  }
+  const handleShare = async () => {
+    if (!qr?.uri) return
+    if (navigator.share) {
+      await navigator.share({ title: 'MedVault patient QR', text: 'Scan this MedVault QR to request access.', url: qr.uri })
+    } else {
+      await navigator.clipboard.writeText(qr.uri)
+    }
+  }
 
   return (
     <PageShell sidebar={<Sidebar items={sidebarItems} role="patient" />}>
@@ -42,15 +62,20 @@ export default function QRPage() {
         <div style={{ display: 'flex', gap: 'var(--space-6)', flexWrap: 'wrap' }}>
           <motion.div className="card" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} style={{ flex: '0 0 360px', textAlign: 'center' }}>
             <div style={{ padding: 'var(--space-6)', background: 'var(--color-primary-50)', borderRadius: 'var(--radius-xl)', border: '3px solid var(--color-primary-300)', marginBottom: 'var(--space-4)' }}>
-              <QrCode size={200} color="var(--color-primary-600)" style={{ margin: '0 auto' }} />
+              {qr?.qrDataUrl ? (
+                <img src={qr.qrDataUrl} alt="Signed MedVault patient QR" style={{ width: 240, maxWidth: '100%', aspectRatio: '1 / 1', display: 'block', margin: '0 auto', borderRadius: 'var(--radius-lg)' }} />
+              ) : (
+                <QrCode size={200} color="var(--color-primary-600)" style={{ margin: '0 auto' }} />
+              )}
               <div className="badge badge-teal" style={{ marginTop: 'var(--space-3)' }}>{qrPayload}</div>
             </div>
             <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-gray-600)', marginBottom: 'var(--space-4)' }}>
-              Doctors scan this ID, then MedVault asks you for consent before sharing records.
+              Doctors scan this signed QR, then MedVault asks you for consent before sharing records.
+              {qr?.expiresAt ? ` It expires at ${new Date(qr.expiresAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}.` : ''}
             </p>
             <div style={{ display: 'flex', gap: 'var(--space-3)' }}>
-              <button className="btn btn-outline btn-md" style={{ flex: 1 }}><Download size={16} /> Download</button>
-              <button className="btn btn-primary btn-md" style={{ flex: 1 }}><Share2 size={16} /> Share</button>
+              <button className="btn btn-outline btn-md" style={{ flex: 1 }} onClick={handleDownload} disabled={!qr?.qrDataUrl}><Download size={16} /> Download</button>
+              <button className="btn btn-primary btn-md" style={{ flex: 1 }} onClick={handleShare} disabled={!qr?.uri}><Share2 size={16} /> Share</button>
             </div>
           </motion.div>
 

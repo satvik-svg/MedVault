@@ -75,9 +75,9 @@ function computeMedicationEndDate(start: Date, medication: PrescriptionMedicatio
   return addDays(start, days)
 }
 
-function generateVerificationQR(prescription: IPrescription): { url: string; imageUrl: string } {
+async function generateVerificationQR(prescription: IPrescription): Promise<{ url: string; imageUrl: string }> {
   const url = `${config.apiBaseUrl}/verify/prescription/${prescription._id.toString()}`
-  return { url, imageUrl: toQrDataUrl(url, prescription.prescriptionNumber || 'Verify prescription') }
+  return { url, imageUrl: await toQrDataUrl(url, prescription.prescriptionNumber || 'Verify prescription') }
 }
 
 export async function updatePatientActiveMedications(patientId: string, prescription: IPrescription): Promise<void> {
@@ -158,7 +158,7 @@ export async function createPrescription(
   })
 
   prescription.pdfUrl = buildPrescriptionPdfDataUrl(prescription)
-  prescription.verificationQR = generateVerificationQR(prescription)
+  prescription.verificationQR = await generateVerificationQR(prescription)
   prescription.blockchain = {
     ...prescription.blockchain,
     contentHash: sha256HexPrefixed(canonicalizePrescriptionForHashing(prescription)),

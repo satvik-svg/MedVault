@@ -1,7 +1,18 @@
 .footer {
-  background: var(--color-gray-900);
+  background: linear-gradient(180deg, #0f172a 0%, #0a1628 100%);
   color: var(--color-gray-400);
   padding: var(--space-16) 0 var(--space-8);
+  position: relative;
+}
+
+.footer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--color-primary-600);
 }
 
 .footer__grid {
@@ -83,7 +94,9 @@
   transition: color 0.2s ease;
 }
 .footer__link:hover {
-  color: var(--color-primary-400);
+  color: var(--color-primary-300);
+  padding-left: 4px;
+  transition: all 0.2s ease;
 }
 
 .footer__contact-item {
@@ -95,7 +108,7 @@
 }
 
 .footer__bottom {
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
   padding-top: var(--space-6);
   display: flex;
   justify-content: space-between;

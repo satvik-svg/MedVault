@@ -37,6 +37,18 @@ app.use('/api/lab', labRoutes)
 app.use('/verify', verifyRoutes)
 
 // Health check
+app.get('/', (_req, res) => {
+  res.type('html').send(`<!doctype html>
+<html lang="en">
+  <head><meta charset="utf-8"><title>MedVault API</title></head>
+  <body>
+    <h1>MedVault API is running</h1>
+    <p>This is the backend service. Open the frontend at <a href="http://127.0.0.1:3000/">http://127.0.0.1:3000/</a>.</p>
+    <p>API health check: <a href="/api/health">/api/health</a></p>
+  </body>
+</html>`)
+})
+
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() })
 })

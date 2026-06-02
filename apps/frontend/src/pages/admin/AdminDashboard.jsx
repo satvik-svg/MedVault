@@ -76,7 +76,7 @@ export default function AdminDashboard() {
                 <XAxis dataKey="day" tick={{ fontSize: 11, fill: '#94a3b8' }} />
                 <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} />
                 <Tooltip contentStyle={{ borderRadius: 12, border: 'none', boxShadow: '0 4px 16px rgba(0,0,0,0.1)' }} />
-                <Line type="monotone" dataKey="prescriptions" stroke="#00b5b5" strokeWidth={2.5} dot={false} />
+                <Line type="monotone" dataKey="prescriptions" stroke="#3b82f6" strokeWidth={2.5} dot={false} />
               </LineChart>
             </ResponsiveContainer>
           </motion.div>

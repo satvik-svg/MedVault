@@ -21,8 +21,8 @@ export default function ABHAVerify() {
     <div className="auth-page">
       <div className="auth-page__left">
         <div className="auth-page__left-content">
-          <div className="auth-page__left-blobs"><div className="blob blob-1" /><div className="blob blob-2" /></div>
-          <Link to="/" className="auth-page__logo"><div className="navbar__logo-icon"><Shield size={24} /></div><span className="navbar__logo-text">MedVault</span></Link>
+
+          <Link to="/" className="auth-page__logo"><img src="/logo-removebg-preview.png" alt="MedVault Logo" style={{ width: 32, height: 32, objectFit: 'contain' }} /><span className="navbar__logo-text">MedVault</span></Link>
           <h2 className="auth-page__left-title">Verify your ABHA<br />Health Account</h2>
           <p className="auth-page__left-desc">Connect your Ayushman Bharat Health Account for seamless medical records access.</p>
         </div>

@@ -27,12 +27,9 @@ export default function Register() {
     <div className="auth-page">
       <div className="auth-page__left">
         <div className="auth-page__left-content">
-          <div className="auth-page__left-blobs">
-            <div className="blob blob-1" />
-            <div className="blob blob-2" />
-          </div>
+
           <Link to="/" className="auth-page__logo">
-            <div className="navbar__logo-icon"><Shield size={24} /></div>
+            <img src="/logo-removebg-preview.png" alt="MedVault Logo" style={{ width: 36, height: 36, objectFit: 'contain' }} />
             <span className="navbar__logo-text">MedVault</span>
           </Link>
           <h2 className="auth-page__left-title">Join the future of<br />healthcare</h2>

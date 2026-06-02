@@ -19,16 +19,18 @@ export default function PatientDashboard() {
   const [summary, setSummary] = useState(null)
   const [timeline, setTimeline] = useState([])
   const [labOrders, setLabOrders] = useState([])
+  const [qr, setQr] = useState(null)
   const [error, setError] = useState('')
 
   useEffect(() => {
     let alive = true
-    Promise.all([patientApi.summary(), patientApi.records(), patientApi.labOrders()])
-      .then(([summaryData, timelineData, labOrderData]) => {
+    Promise.all([patientApi.summary(), patientApi.records(), patientApi.labOrders(), patientApi.qr()])
+      .then(([summaryData, timelineData, labOrderData, qrData]) => {
         if (!alive) return
         setSummary(summaryData)
         setTimeline(timelineData)
         setLabOrders(labOrderData)
+        setQr(qrData)
       })
       .catch((err) => alive && setError(err.message))
     return () => { alive = false }
@@ -97,7 +99,11 @@ export default function PatientDashboard() {
             <h3>My QR Code</h3>
             <div className="qr-preview-card__qr">
               <div className="qr-placeholder">
-                <QrCode size={80} color="var(--color-primary-500)" />
+                {qr?.qrDataUrl ? (
+                  <img src={qr.qrDataUrl} alt="Signed MedVault patient QR" style={{ width: 96, height: 96, borderRadius: 'var(--radius-md)' }} />
+                ) : (
+                  <QrCode size={80} color="var(--color-primary-500)" />
+                )}
               </div>
             </div>
             <p className="qr-preview-card__hint">Show this to your doctor</p>

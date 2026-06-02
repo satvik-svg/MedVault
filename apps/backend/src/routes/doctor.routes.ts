@@ -12,6 +12,7 @@ import { Visit } from '../models/Visit.ts'
 import { buildPatientSummary, buildPatientTimeline } from '../services/patient-summary.service.ts'
 import { checkMedicationForPrescription, createPrescription, SafetyCheckError } from '../services/prescription.service.ts'
 import { checkOrRequestConsent } from '../services/consent.service.ts'
+import { verifySignedPayload } from '../utils/qr.ts'
 
 const router: RouterType = Router()
 
@@ -67,11 +68,30 @@ router.get('/patient/:patientId/record', requireRole('DOCTOR'), async (req, res)
 
 router.post('/scan-qr', requireRole('DOCTOR'), async (req, res) => {
   try {
+    let qrPatientId: string | undefined
+    let qrMedvaultId: string | undefined
+    let qrAbhaId: string | undefined
+    const rawToken = String(req.body.token || '').trim()
+
+    if (rawToken.includes('.')) {
+      const payload = verifySignedPayload<{
+        type: string
+        patientId?: string
+        medvaultId?: string
+        abhaId?: string
+      }>(rawToken)
+      if (payload.type !== 'PATIENT_ACCESS') throw new Error('Unsupported QR token')
+      qrPatientId = payload.patientId
+      qrMedvaultId = payload.medvaultId
+      qrAbhaId = payload.abhaId
+    }
+
     const patient = await Patient.findOne({
       $or: [
-        { medvaultId: req.body.medvaultId || req.body.token },
-        { abhaId: req.body.abhaId || req.body.token },
-      ],
+        ...(qrPatientId ? [{ _id: qrPatientId }] : []),
+        { medvaultId: req.body.medvaultId || qrMedvaultId || rawToken },
+        { abhaId: req.body.abhaId || qrAbhaId || rawToken },
+      ].filter(Boolean),
     })
     if (!patient) throw new Error('Patient not found')
     const decision = await checkOrRequestConsent(patient._id.toString(), req.user?.userId || '', {

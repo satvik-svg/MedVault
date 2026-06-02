@@ -1,7 +1,10 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { Shield, User, Stethoscope, FlaskConical, Eye, EyeOff, ArrowRight } from 'lucide-react'
+import { Shield, User, Stethoscope, FlaskConical, Eye, EyeOff, ArrowRight, Loader2 } from 'lucide-react'
+import toast from 'react-hot-toast'
+import { authApi } from '../../lib/api.js'
+import { useAuthStore } from '../../stores/index.js'
 import './Auth.css'
 
 const roles = [
@@ -13,19 +16,39 @@ const roles = [
 export default function Login() {
   const [role, setRole] = useState('patient')
   const [showPassword, setShowPassword] = useState(false)
+  const [form, setForm] = useState({ email: '', password: '' })
+  const [loading, setLoading] = useState(false)
+  const navigate = useNavigate()
+  const login = useAuthStore((state) => state.login)
 
-  const dashboardRoutes = { patient: '/patient/dashboard', doctor: '/doctor/dashboard', lab: '/lab/dashboard' }
+  const dashboardRoutes = { PATIENT: '/patient/dashboard', DOCTOR: '/doctor/dashboard', LAB_OPERATOR: '/lab/dashboard' }
+
+  const handleSubmit = async (event) => {
+    event.preventDefault()
+    setLoading(true)
+    try {
+      const session = await authApi.login(form.email.trim(), form.password)
+      const userRole = session.user?.role
+      const expectedRole = role === 'lab' ? 'LAB_OPERATOR' : role.toUpperCase()
+      if (userRole && userRole !== expectedRole) {
+        toast.error(`This account is registered as ${userRole.toLowerCase().replace('_', ' ')}`)
+      }
+      login(session.user, session.accessToken, userRole)
+      navigate(dashboardRoutes[userRole] || '/patient/dashboard', { replace: true })
+    } catch (error) {
+      toast.error(error.message || 'Login failed')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   return (
     <div className="auth-page">
       <div className="auth-page__left">
         <div className="auth-page__left-content">
-          <div className="auth-page__left-blobs">
-            <div className="blob blob-1" />
-            <div className="blob blob-2" />
-          </div>
+
           <Link to="/" className="auth-page__logo">
-            <div className="navbar__logo-icon"><Shield size={24} /></div>
+            <img src="/logo-removebg-preview.png" alt="MedVault Logo" style={{ width: 36, height: 36, objectFit: 'contain' }} />
             <span className="navbar__logo-text">MedVault</span>
           </Link>
           <h2 className="auth-page__left-title">Your health, secured<br />and connected</h2>
@@ -56,15 +79,31 @@ export default function Login() {
             ))}
           </div>
 
-          <form className="auth-form" onSubmit={(e) => { e.preventDefault(); window.location.href = dashboardRoutes[role] }}>
+          <form className="auth-form" onSubmit={handleSubmit}>
             <div className="form-group">
-              <label className="form-label">Email or ABHA ID</label>
-              <input className="form-input" type="text" placeholder="you@example.com or 14-XXXX-XXXX-XXXX" id="login-email" />
+              <label className="form-label">Email</label>
+              <input
+                className="form-input"
+                type="email"
+                placeholder="you@example.com"
+                id="login-email"
+                value={form.email}
+                onChange={(event) => setForm({ ...form, email: event.target.value })}
+                required
+              />
             </div>
             <div className="form-group">
               <label className="form-label">Password</label>
               <div className="auth-password-wrapper">
-                <input className="form-input" type={showPassword ? 'text' : 'password'} placeholder="••••••••" id="login-password" />
+                <input
+                  className="form-input"
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="••••••••"
+                  id="login-password"
+                  value={form.password}
+                  onChange={(event) => setForm({ ...form, password: event.target.value })}
+                  required
+                />
                 <button type="button" className="auth-password-toggle" onClick={() => setShowPassword(!showPassword)}>
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
@@ -74,8 +113,9 @@ export default function Login() {
               <label className="auth-checkbox"><input type="checkbox" /><span>Remember me</span></label>
               <a href="#" className="auth-forgot">Forgot password?</a>
             </div>
-            <button type="submit" className="btn btn-primary btn-lg" style={{ width: '100%' }} id="login-submit">
-              Log In<ArrowRight size={18} />
+            <button type="submit" className="btn btn-primary btn-lg" style={{ width: '100%' }} id="login-submit" disabled={loading}>
+              {loading ? <Loader2 size={18} className="spin" /> : <ArrowRight size={18} />}
+              {loading ? 'Logging in...' : 'Log In'}
             </button>
           </form>
 
