@@ -1,4 +1,4 @@
-import Redis from 'ioredis'
+import { Redis } from 'ioredis'
 import { config } from './env.ts'
 
 export const redis = new Redis(config.redis.url, {
@@ -10,6 +10,6 @@ redis.on('connect', () => {
   console.log('[Redis] Connected')
 })
 
-redis.on('error', (err) => {
+redis.on('error', (err: Error) => {
   console.error('[Redis] Error:', err)
 })
