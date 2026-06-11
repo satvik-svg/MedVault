@@ -1,4 +1,5 @@
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:4000/api'
+const DEFAULT_API_BASE = import.meta.env.PROD ? 'https://medvault-kaoc.onrender.com/api' : '/api'
+const API_BASE = (import.meta.env.VITE_API_URL || DEFAULT_API_BASE).replace(/\/$/, '')
 
 const getHeaders = () => {
   const token = localStorage.getItem('medvault_token')

@@ -188,6 +188,29 @@ node -e "fetch(process.env.SEPOLIA_RPC_URL,{method:'POST',headers:{'content-type
 
 Expected Sepolia chain ID: `0xaa36a7`.
 
+## Deployment Environment
+
+Vercel frontend:
+
+```bash
+VITE_API_URL=https://medvault-kaoc.onrender.com/api
+```
+
+Render backend:
+
+```bash
+NODE_ENV=production
+API_BASE_URL=https://medvault-kaoc.onrender.com
+AI_SERVICE_URL=https://ai-service-733z.onrender.com/api/ai
+USE_ABDM_MOCK=true
+ABDM_MOCK_URL=https://abdm-mock.onrender.com
+STORAGE_PUBLIC_BASE_URL=https://medvault-kaoc.onrender.com
+```
+
+After changing Vercel environment variables, trigger a new frontend deployment. Vite embeds
+`VITE_*` values at build time, so changing the variable without redeploying leaves the old
+API URL in the browser bundle.
+
 ## Verification Commands
 
 Backend:
