@@ -1,5 +1,6 @@
 import { Router, type Router as RouterType } from 'express'
 import {
+  registerHandler,
   requestOtp,
   verifyOtp,
   doctorRegister,
@@ -12,6 +13,7 @@ import { otpRateLimiter, loginRateLimiter } from '../middleware/rateLimiter.ts'
 
 const router: RouterType = Router()
 
+router.post('/register', registerHandler)
 router.post('/patient/signup-otp', otpRateLimiter, requestOtp)
 router.post('/patient/verify-otp', verifyOtp)
 router.post('/doctor/signup', doctorRegister)

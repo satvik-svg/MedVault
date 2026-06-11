@@ -1,5 +1,6 @@
 import type { Request, Response } from 'express'
 import {
+  registerWithPassword,
   patientSignup,
   verifyOtpAndCreatePatient,
   doctorSignup,
@@ -8,6 +9,15 @@ import {
   refreshTokens,
   logout,
 } from '../services/auth.service.ts'
+
+export async function registerHandler(req: Request, res: Response): Promise<void> {
+  try {
+    const result = await registerWithPassword(req.body)
+    res.status(201).json(result)
+  } catch (error) {
+    res.status(400).json({ error: error instanceof Error ? error.message : 'Registration failed' })
+  }
+}
 
 export async function requestOtp(req: Request, res: Response): Promise<void> {
   try {

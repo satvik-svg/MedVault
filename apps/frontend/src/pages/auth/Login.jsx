@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Shield, User, Stethoscope, FlaskConical, Eye, EyeOff, ArrowRight, Loader2 } from 'lucide-react'
 import toast from 'react-hot-toast'
@@ -14,9 +14,10 @@ const roles = [
 ]
 
 export default function Login() {
+  const location = useLocation()
   const [role, setRole] = useState('patient')
   const [showPassword, setShowPassword] = useState(false)
-  const [form, setForm] = useState({ email: '', password: '' })
+  const [form, setForm] = useState({ email: location.state?.email || '', password: '' })
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
   const login = useAuthStore((state) => state.login)
@@ -31,7 +32,11 @@ export default function Login() {
       const userRole = session.user?.role
       const expectedRole = role === 'lab' ? 'LAB_OPERATOR' : role.toUpperCase()
       if (userRole && userRole !== expectedRole) {
+        localStorage.removeItem('medvault_token')
+        localStorage.removeItem('medvault_refresh_token')
+        localStorage.removeItem('medvault_user')
         toast.error(`This account is registered as ${userRole.toLowerCase().replace('_', ' ')}`)
+        return
       }
       login(session.user, session.accessToken, userRole)
       navigate(dashboardRoutes[userRole] || '/patient/dashboard', { replace: true })
