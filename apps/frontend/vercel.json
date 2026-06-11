@@ -7,6 +7,10 @@
     {
       "source": "/verify/:path*",
       "destination": "https://medvault-kaoc.onrender.com/verify/:path*"
+    },
+    {
+      "source": "/:path*",
+      "destination": "/index.html"
     }
   ]
 }
