@@ -193,8 +193,11 @@ Expected Sepolia chain ID: `0xaa36a7`.
 Vercel frontend:
 
 ```bash
-VITE_API_URL=https://medvault-kaoc.onrender.com/api
+VITE_API_URL=/api
 ```
+
+The frontend Vercel deployment rewrites `/api/*` and `/verify/*` to the Render backend,
+so browser requests stay same-origin and do not depend on browser-side CORS.
 
 Render backend:
 

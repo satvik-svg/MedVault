@@ -1,0 +1,12 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://medvault-kaoc.onrender.com/api/:path*"
+    },
+    {
+      "source": "/verify/:path*",
+      "destination": "https://medvault-kaoc.onrender.com/verify/:path*"
+    }
+  ]
+}
