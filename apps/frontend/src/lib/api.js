@@ -87,7 +87,7 @@ export const authApi = {
 
 export const patientApi = {
   profile: () => api.get('/patient/profile'),
-  updateProfile: (data) => api.put('/patient/profile', data),
+  updateProfile: (data) => api.patch('/patient/me', data),
   records: (_page = 1, filters = {}) => api.get(`/patient/timeline?${new URLSearchParams(filters)}`),
   summary: () => api.get('/patient/summary'),
   prescriptions: () => api.get('/patient/prescriptions'),
@@ -139,18 +139,6 @@ export const publicVerifyApi = {
     if (!res.ok) throw new Error((await readError(res)) || 'Lab report verification failed')
     return res.json()
   },
-}
-
-export const recordsApi = {
-  upload: (formData) =>
-    fetch(`${API_BASE}/records/upload`, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${localStorage.getItem('medvault_token')}` },
-      body: formData,
-    }),
-  ocr: (recordId) => api.post(`/records/${recordId}/ocr`, {}),
-  verify: (recordId) => api.get(`/records/${recordId}/verify`),
-  delete: (recordId) => api.delete(`/records/${recordId}`),
 }
 
 export const aiApi = {

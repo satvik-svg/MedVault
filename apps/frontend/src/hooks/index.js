@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef } from 'react'
+import { doctorApi } from '../lib/api.js'
 
 export const useQRScanner = () => {
   const [isScanning, setIsScanning] = useState(false)
@@ -46,12 +47,7 @@ export const useQRScanner = () => {
   const validateQR = useCallback(async (qrToken) => {
     setLoading(true)
     try {
-      const response = await fetch(`/api/qr/validate`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token: qrToken }),
-      })
-      const data = await response.json()
+      const data = await doctorApi.scanQR(qrToken)
       setScannedData(data)
       return data
     } catch (err) {

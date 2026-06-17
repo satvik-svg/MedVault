@@ -1,10 +1,12 @@
 import { NavLink, Link } from 'react-router-dom'
 import { Shield, ChevronLeft, ChevronRight, LogOut } from 'lucide-react'
 import { useState } from 'react'
+import { useAuthStore } from '../../stores/index.js'
 import './Sidebar.css'
 
 export default function Sidebar({ items, role }) {
   const [collapsed, setCollapsed] = useState(false)
+  const logout = useAuthStore((state) => state.logout)
 
   const roleColors = {
     patient: 'var(--color-primary-500)',
@@ -46,7 +48,7 @@ export default function Sidebar({ items, role }) {
       </nav>
 
       <div className="sidebar__footer">
-        <Link to="/" className="sidebar__item" title="Log out">
+        <Link to="/login" className="sidebar__item" title="Log out" onClick={logout}>
           <span className="sidebar__item-icon"><LogOut size={20} /></span>
           {!collapsed && <span className="sidebar__item-label">Log Out</span>}
         </Link>

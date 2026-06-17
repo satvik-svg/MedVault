@@ -13,6 +13,7 @@
     "prisma:validate": "node scripts/prisma-with-env.mjs validate",
     "prisma:push": "prisma db push",
     "seed:references": "tsx src/scripts/seed-reference-data.ts",
+    "seed:demo-users": "tsx src/scripts/seed-demo-users.ts",
     "test": "vitest run",
     "test:watch": "vitest"
   },

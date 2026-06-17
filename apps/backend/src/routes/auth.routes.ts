@@ -1,6 +1,7 @@
 import { Router, type Router as RouterType } from 'express'
 import {
   registerHandler,
+  meHandler,
   requestOtp,
   verifyOtp,
   doctorRegister,
@@ -9,6 +10,7 @@ import {
   refreshHandler,
   logoutHandler,
 } from '../controllers/auth.controller.ts'
+import { authenticate } from '../middleware/auth.ts'
 import { otpRateLimiter, loginRateLimiter } from '../middleware/rateLimiter.ts'
 
 const router: RouterType = Router()
@@ -21,5 +23,6 @@ router.post('/login', loginRateLimiter, loginHandler)
 router.post('/login/first-time', loginRateLimiter, firstTimeLoginHandler)
 router.post('/refresh', refreshHandler)
 router.post('/logout', logoutHandler)
+router.get('/me', authenticate, meHandler)
 
 export default router

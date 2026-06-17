@@ -4,9 +4,41 @@ import { Doctor } from '../models/Doctor.ts'
 import { Lab } from '../models/Lab.ts'
 import { Patient } from '../models/Patient.ts'
 import { User } from '../models/User.ts'
+import { Visit } from '../models/Visit.ts'
 import { generateMedvaultId, generateTempPassword } from '../utils/helpers.ts'
 import { sendAdminAlert, sendWhatsApp } from './notification.service.ts'
 import { queueDoctorForManualReview, queueLabForManualReview } from '../verification/nmc.verification.ts'
+
+function normalizeIndianPhone(phoneNumber: string | undefined): string {
+  const compact = (phoneNumber || '').replace(/[\s-]/g, '')
+  if (/^[6-9]\d{9}$/.test(compact)) return `+91${compact}`
+  return compact
+}
+
+async function createOrReuseWalkInVisit(patientId: string, doctorId?: string, createdBy?: string): Promise<unknown | undefined> {
+  if (!doctorId) return undefined
+
+  const start = new Date()
+  start.setHours(0, 0, 0, 0)
+  const end = new Date()
+  end.setHours(23, 59, 59, 999)
+
+  const existingVisit = await Visit.findOne({
+    patientId,
+    doctorId,
+    status: { $in: ['CHECKED_IN', 'IN_CONSULTATION'] },
+    startedAt: { $gte: start, $lte: end },
+  })
+  if (existingVisit) return existingVisit
+
+  return Visit.create({
+    patientId,
+    doctorId,
+    status: 'CHECKED_IN',
+    type: 'WALK_IN',
+    createdBy,
+  })
+}
 
 export async function onboardDoctorByAdmin(input: Record<string, any>, adminUserId: string): Promise<Record<string, unknown>> {
   const tempPassword = generateTempPassword()
@@ -142,25 +174,29 @@ export async function sendLabCredentials(labId: string): Promise<{ sent: boolean
   return { sent: true }
 }
 
-export async function initiatePatientQuickRegister(phoneNumber: string): Promise<{ otpSent: boolean; expiresIn: number; alreadyRegistered?: boolean; patientId?: string }> {
-  const existingUser = await User.findOne({ phoneNumber, role: 'PATIENT' })
+export async function initiatePatientQuickRegister(phoneNumber: string, doctorId?: string, registeredBy?: string): Promise<{ otpSent: boolean; expiresIn: number; alreadyRegistered?: boolean; patientId?: string; visit?: unknown }> {
+  const normalizedPhoneNumber = normalizeIndianPhone(phoneNumber)
+  const existingUser = await User.findOne({ phoneNumber: normalizedPhoneNumber, role: 'PATIENT' })
   if (existingUser) {
-    return { otpSent: false, expiresIn: 0, alreadyRegistered: true, patientId: existingUser.patientId?.toString() }
+    const patientId = existingUser.patientId?.toString()
+    const visit = patientId ? await createOrReuseWalkInVisit(patientId, doctorId, registeredBy) : undefined
+    return { otpSent: false, expiresIn: 0, alreadyRegistered: true, patientId, visit }
   }
 
   const otp = Math.floor(100000 + Math.random() * 900000).toString()
-  await redis.setex(`otp:quickreg:${phoneNumber}`, 600, await bcrypt.hash(otp, 10))
-  await sendWhatsApp(phoneNumber, `Your MedVault walk-in registration OTP is ${otp}. Read it to the front desk staff. Valid for 10 minutes.`)
+  await redis.setex(`otp:quickreg:${normalizedPhoneNumber}`, 600, await bcrypt.hash(otp, 10))
+  await sendWhatsApp(normalizedPhoneNumber, `Your MedVault walk-in registration OTP is ${otp}. Read it to the front desk staff. Valid for 10 minutes.`)
   return { otpSent: true, expiresIn: 600 }
 }
 
-export async function completePatientQuickRegister(input: Record<string, any>, registeredBy: string): Promise<Record<string, unknown>> {
-  const hashedOtp = await redis.get(`otp:quickreg:${input.phoneNumber}`)
+export async function completePatientQuickRegister(input: Record<string, any>, registeredBy: string, doctorId?: string): Promise<Record<string, unknown>> {
+  const phoneNumber = normalizeIndianPhone(input.phoneNumber)
+  const hashedOtp = await redis.get(`otp:quickreg:${phoneNumber}`)
   if (!hashedOtp || !(await bcrypt.compare(input.otp, hashedOtp))) throw new Error('Invalid or expired OTP')
-  await redis.del(`otp:quickreg:${input.phoneNumber}`)
+  await redis.del(`otp:quickreg:${phoneNumber}`)
 
   const user = await User.create({
-    phoneNumber: input.phoneNumber,
+    phoneNumber,
     role: 'PATIENT',
     isPhoneVerified: true,
   })
@@ -172,11 +208,12 @@ export async function completePatientQuickRegister(input: Record<string, any>, r
     fullName: input.fullName,
     dateOfBirth: input.dateOfBirth || new Date(),
     sex: input.sex || 'O',
-    contact: { primaryPhone: input.phoneNumber },
+    contact: { primaryPhone: phoneNumber },
     onboarding: { method: 'QUICK_REGISTER_BY_STAFF', registeredBy },
   })
 
   await User.updateOne({ _id: user._id }, { patientId: patient._id })
-  await sendWhatsApp(input.phoneNumber, `Welcome to MedVault. Your MedVault ID is ${medvaultId}. Complete your profile from your phone when convenient.`)
-  return { patient, medvaultId }
+  const visit = await createOrReuseWalkInVisit(patient._id.toString(), doctorId, registeredBy)
+  await sendWhatsApp(phoneNumber, `Welcome to MedVault. Your MedVault ID is ${medvaultId}. Complete your profile from your phone when convenient.`)
+  return { patient, medvaultId, visit }
 }

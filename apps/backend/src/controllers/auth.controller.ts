@@ -9,6 +9,7 @@ import {
   refreshTokens,
   logout,
 } from '../services/auth.service.ts'
+import { User } from '../models/User.ts'
 
 export async function registerHandler(req: Request, res: Response): Promise<void> {
   try {
@@ -16,6 +17,34 @@ export async function registerHandler(req: Request, res: Response): Promise<void
     res.status(201).json(result)
   } catch (error) {
     res.status(400).json({ error: error instanceof Error ? error.message : 'Registration failed' })
+  }
+}
+
+export async function meHandler(req: Request, res: Response): Promise<void> {
+  try {
+    if (!req.user?.userId) {
+      res.status(401).json({ error: 'Unauthenticated' })
+      return
+    }
+
+    const user = await User.findById(req.user.userId).select('email phoneNumber role patientId doctorId labId mustChangePassword isActive isLocked').lean()
+    if (!user || user.isActive === false || user.isLocked) {
+      res.status(401).json({ error: 'User is not active' })
+      return
+    }
+
+    res.json({
+      id: user._id,
+      email: user.email,
+      phoneNumber: user.phoneNumber,
+      role: user.role,
+      patientId: user.patientId,
+      doctorId: user.doctorId,
+      labId: user.labId,
+      mustChangePassword: user.mustChangePassword,
+    })
+  } catch (error) {
+    res.status(500).json({ error: error instanceof Error ? error.message : 'Failed to fetch current user' })
   }
 }
 

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useParams } from 'react-router-dom'
+import { useParams, useSearchParams } from 'react-router-dom'
 import { Home, Camera, Edit, Users, BarChart2, Pill, AlertTriangle, CheckCircle, AlertOctagon, Search, ArrowRight } from 'lucide-react'
 import Sidebar from '../../components/layout/Sidebar.jsx'
 import PageShell from '../../components/layout/PageShell.jsx'
@@ -16,6 +16,8 @@ const sidebarItems = [
 ]
 export default function PrescriptionWriter() {
   const params = useParams()
+  const [searchParams] = useSearchParams()
+  const visitId = searchParams.get('visitId') || ''
   const [drugName, setDrugName] = useState('')
   const [selectedDrug, setSelectedDrug] = useState(null)
   const [suggestions, setSuggestions] = useState([])
@@ -91,6 +93,7 @@ export default function PrescriptionWriter() {
       if (!selectedDrug?.rxnormCui) throw new Error('Select a drug from reference search')
       await doctorApi.prescribe({
         patientId,
+        visitId: visitId || undefined,
         diagnosis: [{ icd10Code: 'Z00.0', displayName: 'General medical examination', isPrimary: true }],
         medications: [medicationPayload()],
         notes,

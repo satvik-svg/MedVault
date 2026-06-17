@@ -51,7 +51,7 @@ router.post('/lab/:id/send-credentials', requireRole('PLATFORM_ADMIN'), async (r
 
 router.post('/patient/initiate', requireRole('DOCTOR', 'PLATFORM_ADMIN'), async (req, res) => {
   try {
-    const result = await initiatePatientQuickRegister(req.body.phoneNumber)
+    const result = await initiatePatientQuickRegister(req.body.phoneNumber, req.user?.doctorId, req.user?.userId)
     res.json(result)
   } catch (error) {
     res.status(400).json({ error: error instanceof Error ? error.message : 'Patient quick registration failed' })
@@ -60,7 +60,7 @@ router.post('/patient/initiate', requireRole('DOCTOR', 'PLATFORM_ADMIN'), async 
 
 router.post('/patient/complete', requireRole('DOCTOR', 'PLATFORM_ADMIN'), async (req, res) => {
   try {
-    const result = await completePatientQuickRegister(req.body, req.user!.userId)
+    const result = await completePatientQuickRegister(req.body, req.user!.userId, req.user?.doctorId)
     res.status(201).json(result)
   } catch (error) {
     res.status(400).json({ error: error instanceof Error ? error.message : 'Patient quick registration failed' })

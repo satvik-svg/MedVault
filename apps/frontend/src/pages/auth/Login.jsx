@@ -11,6 +11,14 @@ const roles = [
   { id: 'patient', label: 'Patient', icon: <User size={20} /> },
   { id: 'doctor', label: 'Doctor', icon: <Stethoscope size={20} /> },
   { id: 'lab', label: 'Lab', icon: <FlaskConical size={20} /> },
+  { id: 'admin', label: 'Admin', icon: <Shield size={20} /> },
+]
+
+const demoCredentials = [
+  { role: 'patient', label: 'Patient', email: 'patient@medvault.dev', password: 'MedVault@123' },
+  { role: 'doctor', label: 'Doctor', email: 'doctor@medvault.dev', password: 'MedVault@123' },
+  { role: 'lab', label: 'Lab', email: 'lab@medvault.dev', password: 'MedVault@123' },
+  { role: 'admin', label: 'Admin', email: 'admin@medvault.dev', password: 'MedVault@123' },
 ]
 
 export default function Login() {
@@ -21,8 +29,26 @@ export default function Login() {
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
   const login = useAuthStore((state) => state.login)
+  const logout = useAuthStore((state) => state.logout)
 
-  const dashboardRoutes = { PATIENT: '/patient/dashboard', DOCTOR: '/doctor/dashboard', LAB_OPERATOR: '/lab/dashboard' }
+  const dashboardRoutes = {
+    PATIENT: '/patient/dashboard',
+    DOCTOR: '/doctor/dashboard',
+    LAB_OPERATOR: '/lab/dashboard',
+    PLATFORM_ADMIN: '/admin/dashboard',
+  }
+
+  const roleMap = {
+    patient: 'PATIENT',
+    doctor: 'DOCTOR',
+    lab: 'LAB_OPERATOR',
+    admin: 'PLATFORM_ADMIN',
+  }
+
+  const fillDemoCredentials = (credentials) => {
+    setRole(credentials.role)
+    setForm({ email: credentials.email, password: credentials.password })
+  }
 
   const handleSubmit = async (event) => {
     event.preventDefault()
@@ -30,11 +56,9 @@ export default function Login() {
     try {
       const session = await authApi.login(form.email.trim(), form.password)
       const userRole = session.user?.role
-      const expectedRole = role === 'lab' ? 'LAB_OPERATOR' : role.toUpperCase()
+      const expectedRole = roleMap[role]
       if (userRole && userRole !== expectedRole) {
-        localStorage.removeItem('medvault_token')
-        localStorage.removeItem('medvault_refresh_token')
-        localStorage.removeItem('medvault_user')
+        logout()
         toast.error(`This account is registered as ${userRole.toLowerCase().replace('_', ' ')}`)
         return
       }
@@ -123,6 +147,23 @@ export default function Login() {
               {loading ? 'Logging in...' : 'Log In'}
             </button>
           </form>
+
+          <div className="auth-demo-logins">
+            <span className="auth-demo-logins__title">Demo logins</span>
+            <div className="auth-demo-logins__grid">
+              {demoCredentials.map((credentials) => (
+                <button
+                  key={credentials.role}
+                  type="button"
+                  className="auth-demo-login"
+                  onClick={() => fillDemoCredentials(credentials)}
+                >
+                  <span>{credentials.label}</span>
+                  <small>{credentials.email}</small>
+                </button>
+              ))}
+            </div>
+          </div>
 
           <p className="auth-form__footer">
             Don't have an account? <Link to="/register">Register →</Link>

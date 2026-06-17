@@ -89,7 +89,7 @@ export default function QRScanner() {
                     <div><span style={{ color: 'var(--color-gray-400)' }}>Access:</span> {formatDecision(result?.decision)}</div>
                     <div><span style={{ color: 'var(--color-gray-400)' }}>Consent:</span> {result?.consentId || result?.requestId || 'Pending'}</div>
                   </div>
-                  <Link to={`/doctor/prescribe/${result?.patientId}`} className="btn btn-primary btn-md" style={{ width: '100%' }}>
+                  <Link to={`/doctor/patient/${result?.patientId}`} className="btn btn-primary btn-md" style={{ width: '100%' }}>
                     View Full Record & Prescribe <ArrowRight size={16} />
                   </Link>
                 </div>

@@ -1,24 +1,40 @@
 import { create } from 'zustand'
 
+const readStoredUser = () => {
+  try {
+    return JSON.parse(localStorage.getItem('medvault_user') || 'null')
+  } catch {
+    return null
+  }
+}
+
+const storedUser = readStoredUser()
+const storedToken = localStorage.getItem('medvault_token')
+
 export const useAuthStore = create((set) => ({
-  user: null,
-  token: null,
-  role: null,
-  isAuthenticated: false,
+  user: storedUser,
+  token: storedToken,
+  role: storedUser?.role || null,
+  isAuthenticated: !!storedToken && !!storedUser,
 
   login: (user, token, role) => set({
     user,
     token,
-    role,
+    role: role || user?.role || null,
     isAuthenticated: true,
   }),
 
-  logout: () => set({
-    user: null,
-    token: null,
-    role: null,
-    isAuthenticated: false,
-  }),
+  logout: () => {
+    localStorage.removeItem('medvault_token')
+    localStorage.removeItem('medvault_refresh_token')
+    localStorage.removeItem('medvault_user')
+    set({
+      user: null,
+      token: null,
+      role: null,
+      isAuthenticated: false,
+    })
+  },
 
   setUser: (user) => set({ user }),
 
