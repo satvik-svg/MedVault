@@ -3,10 +3,8 @@ import { useAuthStore } from '../../stores/index.js'
 
 export default function ProtectedRoute({ allowedRoles, children }) {
   const location = useLocation()
-  const { isAuthenticated, role } = useAuthStore((state) => ({
-    isAuthenticated: state.isAuthenticated,
-    role: state.role,
-  }))
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
+  const role = useAuthStore((state) => state.role)
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace state={{ from: location.pathname }} />
