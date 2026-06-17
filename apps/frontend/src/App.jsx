@@ -25,6 +25,7 @@ import LabUploadReport from './pages/lab/LabUploadReport.jsx'
 import VerifyPrescription from './pages/verify/VerifyPrescription.jsx'
 import VerifyLabReport from './pages/verify/VerifyLabReport.jsx'
 import ProtectedRoute from './components/auth/ProtectedRoute.jsx'
+import ErrorBoundary from './components/ErrorBoundary.jsx'
 
 const protect = (allowedRoles, element) => (
   <ProtectedRoute allowedRoles={allowedRoles}>{element}</ProtectedRoute>
@@ -44,34 +45,36 @@ function App() {
           },
         }}
       />
-      <AnimatePresence mode="wait">
-        <Routes>
-          <Route path="/" element={<Landing />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/auth/abha-verify" element={<ABHAVerify />} />
-          <Route path="/patient/dashboard" element={protect(['PATIENT'], <PatientDashboard />)} />
-          <Route path="/patient/records" element={protect(['PATIENT'], <MedicalRecord />)} />
-          <Route path="/patient/prescriptions" element={protect(['PATIENT'], <PatientPrescriptions />)} />
-          <Route path="/patient/qr" element={protect(['PATIENT'], <QRPage />)} />
-          <Route path="/doctor/dashboard" element={protect(['DOCTOR'], <DoctorPortal />)} />
-          <Route path="/doctor/prescribe/:patientId" element={protect(['DOCTOR'], <PrescriptionWriter />)} />
-          <Route path="/doctor/prescribe" element={protect(['DOCTOR'], <PrescriptionWriter />)} />
-          <Route path="/doctor/scan" element={protect(['DOCTOR'], <QRScanner />)} />
-          <Route path="/doctor/drug-checker" element={protect(['DOCTOR'], <DrugChecker />)} />
-          <Route path="/doctor/patient/:patientId" element={protect(['DOCTOR'], <PatientQuickView />)} />
-          <Route path="/doctor/order-tests/:patientId" element={protect(['DOCTOR'], <OrderTests />)} />
-          <Route path="/admin/dashboard" element={protect(['PLATFORM_ADMIN'], <AdminDashboard />)} />
-          <Route path="/admin/onboarding/doctor/new" element={protect(['PLATFORM_ADMIN'], <DoctorOnboarding />)} />
-          <Route path="/admin/onboarding/lab/new" element={protect(['PLATFORM_ADMIN'], <LabOnboarding />)} />
-          <Route path="/lab/dashboard" element={protect(['LAB_OPERATOR'], <LabDashboard />)} />
-          <Route path="/lab/orders" element={protect(['LAB_OPERATOR'], <LabOrders />)} />
-          <Route path="/lab/orders/:orderId" element={protect(['LAB_OPERATOR'], <LabOrderDetail />)} />
-          <Route path="/lab/upload-report" element={protect(['LAB_OPERATOR'], <LabUploadReport />)} />
-          <Route path="/verify/prescription/:id" element={<VerifyPrescription />} />
-          <Route path="/verify/lab-report/:id" element={<VerifyLabReport />} />
-        </Routes>
-      </AnimatePresence>
+      <ErrorBoundary>
+        <AnimatePresence mode="wait">
+          <Routes>
+            <Route path="/" element={<Landing />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/auth/abha-verify" element={<ABHAVerify />} />
+            <Route path="/patient/dashboard" element={protect(['PATIENT'], <PatientDashboard />)} />
+            <Route path="/patient/records" element={protect(['PATIENT'], <MedicalRecord />)} />
+            <Route path="/patient/prescriptions" element={protect(['PATIENT'], <PatientPrescriptions />)} />
+            <Route path="/patient/qr" element={protect(['PATIENT'], <QRPage />)} />
+            <Route path="/doctor/dashboard" element={protect(['DOCTOR'], <DoctorPortal />)} />
+            <Route path="/doctor/prescribe/:patientId" element={protect(['DOCTOR'], <PrescriptionWriter />)} />
+            <Route path="/doctor/prescribe" element={protect(['DOCTOR'], <PrescriptionWriter />)} />
+            <Route path="/doctor/scan" element={protect(['DOCTOR'], <QRScanner />)} />
+            <Route path="/doctor/drug-checker" element={protect(['DOCTOR'], <DrugChecker />)} />
+            <Route path="/doctor/patient/:patientId" element={protect(['DOCTOR'], <PatientQuickView />)} />
+            <Route path="/doctor/order-tests/:patientId" element={protect(['DOCTOR'], <OrderTests />)} />
+            <Route path="/admin/dashboard" element={protect(['PLATFORM_ADMIN'], <AdminDashboard />)} />
+            <Route path="/admin/onboarding/doctor/new" element={protect(['PLATFORM_ADMIN'], <DoctorOnboarding />)} />
+            <Route path="/admin/onboarding/lab/new" element={protect(['PLATFORM_ADMIN'], <LabOnboarding />)} />
+            <Route path="/lab/dashboard" element={protect(['LAB_OPERATOR'], <LabDashboard />)} />
+            <Route path="/lab/orders" element={protect(['LAB_OPERATOR'], <LabOrders />)} />
+            <Route path="/lab/orders/:orderId" element={protect(['LAB_OPERATOR'], <LabOrderDetail />)} />
+            <Route path="/lab/upload-report" element={protect(['LAB_OPERATOR'], <LabUploadReport />)} />
+            <Route path="/verify/prescription/:id" element={<VerifyPrescription />} />
+            <Route path="/verify/lab-report/:id" element={<VerifyLabReport />} />
+          </Routes>
+        </AnimatePresence>
+      </ErrorBoundary>
     </>
   )
 }

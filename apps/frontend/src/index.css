@@ -467,6 +467,35 @@ ul, ol {
   animation: spin 0.8s linear infinite;
 }
 
+.app-error {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: var(--space-6);
+  background: var(--color-gray-50);
+}
+
+.app-error__panel {
+  width: min(100%, 440px);
+  padding: var(--space-8);
+  border: 1px solid var(--color-gray-200);
+  border-radius: var(--radius-lg);
+  background: white;
+  box-shadow: var(--shadow-lg);
+  text-align: center;
+}
+
+.app-error__panel h1 {
+  margin-bottom: var(--space-3);
+  color: var(--color-gray-900);
+  font-size: var(--text-2xl);
+}
+
+.app-error__panel p {
+  margin-bottom: var(--space-6);
+  color: var(--color-gray-600);
+}
+
 @keyframes progressBar {
   from { width: 100%; }
   to   { width: 0%; }

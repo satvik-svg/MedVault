@@ -28,8 +28,8 @@ export default function PatientDashboard() {
       .then(([summaryData, timelineData, labOrderData, qrData]) => {
         if (!alive) return
         setSummary(summaryData)
-        setTimeline(timelineData)
-        setLabOrders(labOrderData)
+        setTimeline(asArray(timelineData))
+        setLabOrders(asArray(labOrderData))
         setQr(qrData)
       })
       .catch((err) => alive && setError(err.message))
@@ -37,15 +37,16 @@ export default function PatientDashboard() {
   }, [])
 
   const patient = summary?.patient || {}
-  const activeMeds = patient.activeMedications || []
-  const prescriptions = (summary?.recentPrescriptions || []).slice(0, 4)
-  const visits = timeline.filter(event => event.type === 'VISIT').slice(0, 3)
+  const activeMeds = asArray(patient.activeMedications)
+  const allergies = asArray(patient.allergies)
+  const prescriptions = asArray(summary?.recentPrescriptions).slice(0, 4)
+  const visits = asArray(timeline).filter(event => event?.type === 'VISIT').slice(0, 3)
   const stats = useMemo(() => ([
     { label: 'Active Meds', value: String(activeMeds.length), icon: <Pill size={22} />, color: 'var(--color-primary-500)', bg: 'var(--color-primary-50)' },
-    { label: 'Allergies', value: String((patient.allergies || []).length), icon: <AlertTriangle size={22} />, color: 'var(--color-moderate)', bg: 'var(--color-moderate-bg)' },
+    { label: 'Allergies', value: String(allergies.length), icon: <AlertTriangle size={22} />, color: 'var(--color-moderate)', bg: 'var(--color-moderate-bg)' },
     { label: 'Visits', value: String(summary?.stats?.totalVisits || 0), icon: <Calendar size={22} />, color: 'var(--color-secondary-500)', bg: '#eff6ff' },
     { label: 'Anchored Rx', value: String(prescriptions.filter(rx => rx.blockchain?.status === 'ANCHORED').length), icon: <Hash size={22} />, color: 'var(--color-gold)', bg: 'var(--color-gold-bg)' },
-  ]), [activeMeds.length, patient.allergies, prescriptions, summary?.stats?.totalVisits])
+  ]), [activeMeds.length, allergies.length, prescriptions, summary?.stats?.totalVisits])
 
   return (
     <PageShell sidebar={<Sidebar items={sidebarItems} role="patient" />}>
@@ -137,22 +138,23 @@ export default function PatientDashboard() {
           <div className="visit-list">
             {visits.length === 0 && <p style={{ color: 'var(--color-gray-600)', fontSize: 'var(--text-sm)' }}>No recent visits found.</p>}
             {visits.map((event) => {
-              const apt = event.data
+              const apt = event?.data || {}
               return (
-              <div key={apt._id} className="visit-item">
-                <div className="visit-item__date">
-                  <Calendar size={16} color="var(--color-primary-500)" />
-                  <span>{formatDate(apt.startedAt)}</span>
-                  <Clock size={14} color="var(--color-gray-400)" />
-                  <span className="visit-item__time">{formatTime(apt.startedAt)}</span>
+                <div key={apt._id || `${event?.type}-${event?.date}`} className="visit-item">
+                  <div className="visit-item__date">
+                    <Calendar size={16} color="var(--color-primary-500)" />
+                    <span>{formatDate(apt.startedAt)}</span>
+                    <Clock size={14} color="var(--color-gray-400)" />
+                    <span className="visit-item__time">{formatTime(apt.startedAt)}</span>
+                  </div>
+                  <div className="visit-item__info">
+                    <strong>{apt.doctorId?.fullName || 'Doctor'}</strong>
+                    <span className="badge badge-teal">{apt.status}</span>
+                    <span className="visit-item__type">{apt.type}</span>
+                  </div>
                 </div>
-                <div className="visit-item__info">
-                  <strong>{apt.doctorId?.fullName || 'Doctor'}</strong>
-                  <span className="badge badge-teal">{apt.status}</span>
-                  <span className="visit-item__type">{apt.type}</span>
-                </div>
-              </div>
-            )})}
+              )
+            })}
           </div>
         </motion.div>
 
@@ -162,7 +164,7 @@ export default function PatientDashboard() {
             {labOrders.length === 0 && <p style={{ color: 'var(--color-gray-600)', fontSize: 'var(--text-sm)' }}>No lab orders yet.</p>}
             {labOrders.slice(0, 4).map((order) => (
               <div key={order._id} className="visit-item">
-                <div><strong>{order.labId?.displayName || 'Lab order'}</strong><span style={{ display: 'block', fontSize: 'var(--text-xs)', color: 'var(--color-gray-500)' }}>{(order.tests || []).map((test) => test.displayName).join(', ')}</span></div>
+                <div><strong>{order.labId?.displayName || 'Lab order'}</strong><span style={{ display: 'block', fontSize: 'var(--text-xs)', color: 'var(--color-gray-500)' }}>{asArray(order.tests).map((test) => test.displayName).filter(Boolean).join(', ') || 'Tests not listed'}</span></div>
                 <span className="badge badge-teal">{order.status}</span>
               </div>
             ))}
@@ -173,8 +175,12 @@ export default function PatientDashboard() {
   )
 }
 
+function asArray(value) {
+  return Array.isArray(value) ? value : []
+}
+
 function initials(name) {
-  return name.split(' ').filter(Boolean).slice(0, 2).map(part => part[0]).join('').toUpperCase()
+  return String(name || '').split(' ').filter(Boolean).slice(0, 2).map(part => part[0]).join('').toUpperCase()
 }
 
 function formatDate(value) {
