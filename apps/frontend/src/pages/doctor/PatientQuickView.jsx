@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { Activity, AlertTriangle, Archive, Calendar, Camera, Edit, FileText, FlaskConical, Home, Pill, TestTube, Users } from 'lucide-react'
+import { Activity, AlertTriangle, Archive, Calendar, Camera, Edit, FileText, FlaskConical, Home, Pill, TestTube, Users, Search } from 'lucide-react'
 import PageShell from '../../components/layout/PageShell.jsx'
 import Sidebar from '../../components/layout/Sidebar.jsx'
 import { patientApi } from '../../lib/api.js'
@@ -10,7 +10,8 @@ const sidebarItems = [
   { path: '/doctor/dashboard', label: 'Overview', icon: <Home size={20} /> },
   { path: '/doctor/scan', label: 'Scan Patient QR', icon: <Camera size={20} /> },
   { path: '/doctor/prescribe', label: 'Write Prescription', icon: <Edit size={20} /> },
-  { path: '/doctor/dashboard', label: 'Patient List', icon: <Users size={20} /> },
+  { path: '/doctor/patients', label: 'Patient List', icon: <Users size={20} /> },
+  { path: '/doctor/drug-checker', label: 'Drug Checker', icon: <Search size={20} /> },
 ]
 
 export default function PatientQuickView() {

@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { motion } from 'framer-motion'
-import { Home, FileText, QrCode, Bell, Settings, CheckCircle, Shield, Pill, FlaskConical, Calendar, ExternalLink } from 'lucide-react'
+import { Home, FileText, QrCode, Bell, Settings, Pill, FlaskConical, Calendar, ExternalLink } from 'lucide-react'
 import Sidebar from '../../components/layout/Sidebar.jsx'
 import PageShell from '../../components/layout/PageShell.jsx'
 import BlockchainBadge from '../../components/BlockchainBadge.jsx'
+import { patientApi } from '../../lib/api.js'
 import './Dashboard.css'
 
 const sidebarItems = [
@@ -16,24 +17,106 @@ const sidebarItems = [
 
 const filters = ['All', 'Prescriptions', 'Lab Reports', 'Visits']
 
-const records = [
-  { month: 'APR 2025', items: [
-    { type: 'prescription', date: '12 Apr 2025', title: 'Amoxicillin 500mg', doctor: 'Dr. Sharma', practice: 'Dr. Sharma Practice', hash: '0x7f3a...d4c2', level: 'safe' },
-    { type: 'lab', date: '8 Apr 2025', title: 'HbA1c', result: '6.8%', range: '<5.7%', verified: true, blockchain: { status: 'ANCHORED', contentHash: '0x7f3a8b10d4c2' } },
-  ]},
-  { month: 'MAR 2025', items: [
-    { type: 'prescription', date: '22 Mar 2025', title: 'Metformin 500mg (renewed)', doctor: 'Dr. Gupta', practice: 'Apollo OPD', hash: '0x9e1b...77f8', level: 'safe' },
-    { type: 'visit', date: '15 Mar 2025', title: 'Routine Check-up', doctor: 'Dr. Sharma', practice: 'Dr. Sharma Practice' },
-  ]},
-  { month: 'JAN 2025', items: [
-    { type: 'prescription', date: '3 Jan 2025', title: 'Amlodipine 5mg', doctor: 'Dr. Sharma', practice: 'Dr. Sharma Practice', hash: '0xa3c4...2e91', level: 'moderate' },
-  ]},
-]
-
-const typeConfig = { prescription: { color: 'var(--color-primary-500)', icon: <Pill size={16} /> }, lab: { color: 'var(--color-secondary-500)', icon: <FlaskConical size={16} /> }, visit: { color: 'var(--color-gray-400)', icon: <Calendar size={16} /> } }
+const typeConfig = {
+  prescription: { color: 'var(--color-primary-500)', icon: <Pill size={16} /> },
+  lab: { color: 'var(--color-secondary-500)', icon: <FlaskConical size={16} /> },
+  visit: { color: 'var(--color-gray-400)', icon: <Calendar size={16} /> }
+}
 
 export default function MedicalRecord() {
   const [activeFilter, setActiveFilter] = useState('All')
+  const [timeline, setTimeline] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    let alive = true
+    patientApi.records()
+      .then((data) => {
+        if (!alive) return
+        setTimeline(Array.isArray(data) ? data : [])
+        setLoading(false)
+      })
+      .catch((err) => {
+        if (!alive) return
+        setError(err.message)
+        setLoading(false)
+      })
+    return () => { alive = false }
+  }, [])
+
+  const groupedRecords = useMemo(() => {
+    const groups = {}
+    timeline.forEach((event) => {
+      if (!event || !event.date) return
+      const date = new Date(event.date)
+      const monthStr = date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }).toUpperCase()
+      if (!groups[monthStr]) {
+        groups[monthStr] = []
+      }
+
+      let type = 'visit'
+      let title = 'Consultation'
+      let doctor = ''
+      let practice = ''
+      let level = null
+      let result = null
+      let range = null
+      let verified = false
+      let blockchain = null
+      let hash = null
+      let recordObj = event.data || {}
+
+      if (event.type === 'PRESCRIPTION') {
+        type = 'prescription'
+        title = (recordObj.medications || []).map(m => m.brandName || m.genericName).join(', ') || recordObj.notes || recordObj.diagnosisText || 'Prescription'
+        doctor = recordObj.doctorId?.fullName || 'Doctor'
+        practice = recordObj.doctorId?.practice?.displayName || 'Practice'
+        hash = recordObj.blockchainTxHash || recordObj.blockchain?.txHash || null
+        const hasAllergyConflict = recordObj.medications?.some(m => m.safetyChecks?.allergyConflict)
+        const hasDdiConflict = recordObj.medications?.some(m => m.safetyChecks?.ddiConflict)
+        level = hasAllergyConflict || hasDdiConflict ? 'severe' : 'safe'
+        blockchain = recordObj.blockchain
+      } else if (event.type === 'LAB_REPORT') {
+        type = 'lab'
+        title = recordObj.results?.[0]?.testName || recordObj.category || 'Lab Report'
+        if (recordObj.results?.length > 1) {
+          title += ` + ${recordObj.results.length - 1} more`
+        }
+        doctor = recordObj.orderedByDoctorId?.fullName || ''
+        practice = recordObj.labId?.displayName || 'Lab Partner'
+        result = recordObj.results?.[0] ? `${recordObj.results[0].value} ${recordObj.results[0].unit || ''}` : null
+        const ref = recordObj.results?.[0]?.referenceRange
+        range = ref ? (typeof ref === 'object' ? `${ref.low || 0} - ${ref.high || ''}` : String(ref)) : null
+        verified = recordObj.isVerified || recordObj.externalUpload?.verifiedByLab || false
+        blockchain = recordObj.blockchain
+        hash = recordObj.blockchainTxHash || recordObj.blockchain?.txHash || null
+      } else if (event.type === 'VISIT') {
+        type = 'visit'
+        title = recordObj.chiefComplaint || 'Consultation Visit'
+        doctor = recordObj.doctorId?.fullName || 'Doctor'
+        practice = recordObj.doctorId?.practice?.displayName || 'Practice'
+      }
+
+      groups[monthStr].push({
+        id: recordObj.id || recordObj._id || Math.random().toString(),
+        type,
+        date: date.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }),
+        title,
+        doctor,
+        practice,
+        level,
+        result,
+        range,
+        verified,
+        blockchain,
+        hash,
+        rawRecord: recordObj,
+      })
+    })
+
+    return Object.entries(groups).map(([month, items]) => ({ month, items }))
+  }, [timeline])
 
   return (
     <PageShell sidebar={<Sidebar items={sidebarItems} role="patient" />}>
@@ -51,14 +134,20 @@ export default function MedicalRecord() {
 
         {/* Timeline */}
         <div className="timeline">
-          {records.map((group, gi) => (
+          {loading && <p style={{ textAlign: 'center', color: 'var(--color-gray-500)' }}>Loading records...</p>}
+          {error && <div className="card" style={{ borderLeft: '4px solid var(--color-severe)', color: 'var(--color-severe)' }}>{error}</div>}
+          {!loading && !error && groupedRecords.length === 0 && (
+            <p style={{ textAlign: 'center', color: 'var(--color-gray-500)' }}>No medical records found.</p>
+          )}
+
+          {!loading && !error && groupedRecords.map((group, gi) => (
             <div key={group.month} className="timeline__group">
               <div className="timeline__month">{group.month}</div>
               {group.items.map((item, ii) => {
                 if (activeFilter !== 'All' && activeFilter.toLowerCase() !== item.type + 's' && !(activeFilter === 'Prescriptions' && item.type === 'prescription') && !(activeFilter === 'Lab Reports' && item.type === 'lab') && !(activeFilter === 'Visits' && item.type === 'visit')) return null
                 const cfg = typeConfig[item.type]
                 return (
-                  <motion.div key={ii} className="timeline__item" initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: ii * 0.1 }}>
+                  <motion.div key={item.id} className="timeline__item" initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: ii * 0.1 }}>
                     <div className="timeline__dot" style={{ background: cfg.color }}>{cfg.icon}</div>
                     <div className="timeline__card card">
                       <div className="timeline__card-header">
@@ -76,13 +165,13 @@ export default function MedicalRecord() {
                       )}
                       {item.hash && (
                         <div style={{ marginTop: 'var(--space-3)', display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
-                          <span className="badge badge-gold">🔐 {item.hash}</span>
-                          <a href="#" style={{ fontSize: 'var(--text-xs)', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>View on chain <ExternalLink size={12} /></a>
+                          <span className="badge badge-gold">🔐 {item.hash.slice(0, 10)}...</span>
+                          <a href={`/verify/${item.type === 'lab' ? 'lab-report' : 'prescription'}/${item.rawRecord.id || item.rawRecord._id}`} style={{ fontSize: 'var(--text-xs)', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>View verification <ExternalLink size={12} /></a>
                         </div>
                       )}
                       {item.type === 'lab' && item.blockchain && (
                         <div style={{ marginTop: 'var(--space-3)' }}>
-                          <BlockchainBadge record={item} />
+                          <BlockchainBadge record={item.rawRecord} />
                         </div>
                       )}
                     </div>

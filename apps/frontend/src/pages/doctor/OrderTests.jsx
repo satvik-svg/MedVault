@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useParams, useSearchParams } from 'react-router-dom'
-import { Camera, Edit, Home, TestTube, Users } from 'lucide-react'
+import { Camera, Edit, Home, TestTube, Users, Search } from 'lucide-react'
 import PageShell from '../../components/layout/PageShell.jsx'
 import Sidebar from '../../components/layout/Sidebar.jsx'
 import LabPicker from '../../components/doctor/LabPicker.jsx'
@@ -11,7 +11,8 @@ const sidebarItems = [
   { path: '/doctor/dashboard', label: 'Overview', icon: <Home size={20} /> },
   { path: '/doctor/scan', label: 'Scan Patient QR', icon: <Camera size={20} /> },
   { path: '/doctor/prescribe', label: 'Write Prescription', icon: <Edit size={20} /> },
-  { path: '/doctor/dashboard', label: 'Patient List', icon: <Users size={20} /> },
+  { path: '/doctor/patients', label: 'Patient List', icon: <Users size={20} /> },
+  { path: '/doctor/drug-checker', label: 'Drug Checker', icon: <Search size={20} /> },
 ]
 
 const commonTests = [

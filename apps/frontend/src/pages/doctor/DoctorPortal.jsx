@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
-import { Home, Camera, Edit, Users, BarChart2, Bell, FileText, AlertTriangle, CheckCircle, QrCode, ArrowRight } from 'lucide-react'
+import { Home, Camera, Edit, Users, Bell, FileText, AlertTriangle, CheckCircle, QrCode, ArrowRight, Search } from 'lucide-react'
 import Sidebar from '../../components/layout/Sidebar.jsx'
 import PageShell from '../../components/layout/PageShell.jsx'
 import QuickRegisterPatient from '../../components/doctor/QuickRegisterPatient.jsx'
@@ -12,8 +12,8 @@ const sidebarItems = [
   { path: '/doctor/dashboard', label: 'Overview', icon: <Home size={20} /> },
   { path: '/doctor/scan', label: 'Scan Patient QR', icon: <Camera size={20} /> },
   { path: '/doctor/prescribe', label: 'Write Prescription', icon: <Edit size={20} /> },
-  { path: '#', label: 'Patient List', icon: <Users size={20} /> },
-  { path: '#', label: 'My Activity', icon: <BarChart2 size={20} /> },
+  { path: '/doctor/patients', label: 'Patient List', icon: <Users size={20} /> },
+  { path: '/doctor/drug-checker', label: 'Drug Checker', icon: <Search size={20} /> },
 ]
 
 export default function DoctorPortal() {

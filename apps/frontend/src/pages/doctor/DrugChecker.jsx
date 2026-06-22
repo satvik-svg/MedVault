@@ -10,7 +10,7 @@ const sidebarItems = [
   { path: '/doctor/scan', label: 'Scan Patient QR', icon: <Camera size={20} /> },
   { path: '/doctor/prescribe', label: 'Write Prescription', icon: <Edit size={20} /> },
   { path: '/doctor/drug-checker', label: 'Drug Checker', icon: <Search size={20} /> },
-  { path: '#', label: 'Patient List', icon: <Users size={20} /> },
+  { path: '/doctor/patients', label: 'Patient List', icon: <Users size={20} /> },
   { path: '#', label: 'My Activity', icon: <BarChart2 size={20} /> },
 ]
 

@@ -15,6 +15,7 @@ import QRScanner from './pages/doctor/QRScanner.jsx'
 import DrugChecker from './pages/doctor/DrugChecker.jsx'
 import PatientQuickView from './pages/doctor/PatientQuickView.jsx'
 import OrderTests from './pages/doctor/OrderTests.jsx'
+import PatientList from './pages/doctor/PatientList.jsx'
 import AdminDashboard from './pages/admin/AdminDashboard.jsx'
 import DoctorOnboarding from './pages/admin/DoctorOnboarding.jsx'
 import LabOnboarding from './pages/admin/LabOnboarding.jsx'
@@ -57,6 +58,7 @@ function App() {
             <Route path="/patient/prescriptions" element={protect(['PATIENT'], <PatientPrescriptions />)} />
             <Route path="/patient/qr" element={protect(['PATIENT'], <QRPage />)} />
             <Route path="/doctor/dashboard" element={protect(['DOCTOR'], <DoctorPortal />)} />
+            <Route path="/doctor/patients" element={protect(['DOCTOR'], <PatientList />)} />
             <Route path="/doctor/prescribe/:patientId" element={protect(['DOCTOR'], <PrescriptionWriter />)} />
             <Route path="/doctor/prescribe" element={protect(['DOCTOR'], <PrescriptionWriter />)} />
             <Route path="/doctor/scan" element={protect(['DOCTOR'], <QRScanner />)} />
